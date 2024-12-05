@@ -20,7 +20,7 @@ const menuItems = [
 
 function Header() {
   return (
-    <header className="flex flex-row justify-between items-center px-10 py-6">
+    <header className="flex flex-row justify-between items-center px-2 lg:px-10 py-6">
       {/* Логотип */}
       <Link to={"/"}>
         <Logo className="transform transition-transform duration-300 hover:scale-125 hover:rotate-45 hover:brightness-125" />
