@@ -15,11 +15,15 @@ export default function Breadcrumb({
   breadcrumbAdditional?: Breadcrumb[];
 }) {
   return (
-    <div>
-      {breadcrumbArray.concat(breadcrumbAdditional || []).map((val) => {
+    <div className="flex flex-row mt-10 mb-10">
+      {breadcrumbArray.concat(breadcrumbAdditional || []).map((val, index) => {
         return (
-          <div>
-            <Link to={val.url}>{val.name}</Link>
+          <div className="flex flex-row justify-center items-center">
+            {(index!==0)&&(<div className="border h-[1px] w-4"></div>)}
+            <div className="border py-2 px-4 rounded-md">
+              <Link to={val.url} className="text-small-grey text-[16px]">{val.name}</Link>
+            </div>
+            
           </div>
         );
       })}
