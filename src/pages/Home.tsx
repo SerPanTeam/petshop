@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import SectionDevider from "../components/SectionDevider";
-import Categoty from "../components/Categoty";
+import Categoty from "../components/Categoties";
 function Home() {
   const navigate = useNavigate();
 
@@ -27,7 +27,7 @@ function Home() {
         buttonName="All categories"
         url="/categories"
       />
-      <Categoty />
+      <Categoty limit={4}/>
       <SectionDevider titleName="Sale" buttonName="All sales" url="/sales" />
     </>
   );

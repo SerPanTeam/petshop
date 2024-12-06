@@ -1,8 +1,13 @@
+import Category from "@/components/Categoties";
+import Breadcrumb from "@/components/Breadcrumb";
 
 function Categories() {
   return (
-    <div>Categories</div>
-  )
+    <div>
+      <Breadcrumb />
+      <Category />
+    </div>
+  );
 }
 
-export default Categories
+export default Categories;

@@ -23,4 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-ftp-deploy-config.js
+#ftp-deploy-config.js
+.env

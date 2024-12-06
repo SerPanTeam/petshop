@@ -27,7 +27,7 @@ const generateFileTree = (dir, prefix = '') => {
   });
 
   items.forEach((item, index) => {
-    if (item.name === 'node_modules' || item.name === '.git') return; // Пропускаем node_modules и .git
+    if (item.name === 'node_modules' || item.name === '.git' || item.name === 'dist') return; // Пропускаем node_modules и .git
 
     const isLast = index === items.length - 1;
     const pointer = isLast ? '└── ' : '├── ';
@@ -77,7 +77,7 @@ const addFile = (filePath) => {
 const collectFiles = (dir, collectedFiles = []) => {
   const items = fs.readdirSync(dir, { withFileTypes: true });
   items.forEach(item => {
-    if (item.name === 'node_modules' || item.name === '.git') return; // Пропускаем node_modules и .git
+    if (item.name === 'node_modules' || item.name === '.git' || item.name === 'dist') return; // Пропускаем node_modules и .git
     const fullPath = path.join(dir, item.name);
     if (item.isDirectory()) {
       collectFiles(fullPath, collectedFiles);

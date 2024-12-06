@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="px-2 lg:px-10">
+    <footer className="px-2 lg:px-10 mt-[100px]">
       <h2 className="heading-2">Contact</h2>
       <div className="flex flex-col lg:flex-row gap-8 mt-10">
         <div className="flex flex-col gap-8 w-full lg:min-w-[240px]">
