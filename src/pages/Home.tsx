@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-
+import SectionDevider from "../components/SectionDevider";
+import Categoty from "../components/Categoty";
 function Home() {
   const navigate = useNavigate();
 
@@ -21,11 +22,13 @@ function Home() {
         </button>
       </section>
 
-      <section className="flex flex-row items-center">
-        <h2 className="heading-2">Categories</h2>
-        <div className="h-[1px] w-full bg-slate-300" />
-        <button className="text-small-grey border-slate-300 border-solid border rounded-md px-2 py-4 mt-20">All categories</button>
-      </section>
+      <SectionDevider
+        titleName="Categories"
+        buttonName="All categories"
+        url="/categories"
+      />
+      <Categoty />
+      <SectionDevider titleName="Sale" buttonName="All sales" url="/sales" />
     </>
   );
 }
