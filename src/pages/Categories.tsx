@@ -1,16 +1,11 @@
-import Category from "@/components/Categoties";
+import Category from "@/components/CategotiesComponent";
 import Breadcrumb from "@/components/Breadcrumb";
 
 function Categories() {
   return (
     <div>
-      <Breadcrumb
-        breadcrumbAdditional={[
-          { name: "Main page", url: "/" },
-          { name: "Categories", url: "/categories" },
-
-        ]}
-      />
+      <Breadcrumb/>
+      <h1 className="heading-2 mb-10">Categories</h1>
       <Category />
     </div>
   );

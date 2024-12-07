@@ -15,27 +15,38 @@
 │   │       └── whatsapp.svg
 │   ├── components
 │   │   ├── ui
-│   │   │   └── dropdown-menu.tsx
-│   │   ├── Categoty.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   └── skeleton.tsx
+│   │   ├── Breadcrumb.tsx
+│   │   ├── CategotiesComponent.tsx
 │   │   ├── Footer.tsx
 │   │   ├── Header.tsx
+│   │   ├── ScrollToTop.tsx
 │   │   └── SectionDevider.tsx
 │   ├── lib
+│   │   ├── db.ts
 │   │   └── utils.ts
 │   ├── pages
 │   │   ├── Cart.tsx
+│   │   ├── Categorie.tsx
 │   │   ├── Categories.tsx
 │   │   ├── Home.tsx
 │   │   ├── NotFound.tsx
 │   │   ├── ProductDetail.tsx
 │   │   ├── Products.tsx
 │   │   └── Sales.tsx
+│   ├── redux
+│   │   ├── slugsSlice.ts
+│   │   ├── store.ts
+│   │   └── userSlice.ts
 │   ├── types
 │   │   └── svg.d.ts
 │   ├── App.tsx
+│   ├── config.ts
 │   ├── index.css
 │   ├── main.tsx
 │   └── vite-env.d.ts
+├── .env
 ├── .gitignore
 ├── codewr.js
 ├── combined-files.md
@@ -71,8 +82,17 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 import Sales from "./pages/Sales";
+import Categorie from "./pages/Categorie";
+
+// import { useDispatch } from "react-redux";
+// import { addSlug } from "@/redux/slugsSlice";
+import { useEffect } from "react";
 
 function App() {
+  useEffect(() => {
+
+  }, []);
+
   return (
     <div className="container min-h-screen flex flex-col justify-between">
       <Header />
@@ -80,9 +100,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/categories" element={<Categories />}>
-            {/* <Route path=":id" element={<Categories id={id} />} /> */}
-          </Route>
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/categories/:categoryName" element={<Categorie />} />
+
           <Route path="/sales" element={<Sales />} />
           <Route path="/products" element={<Products />}>
             <Route path=":id" element={<ProductDetail />} />
@@ -99,50 +119,113 @@ export default App;
 
 ```
 
-## src\components\Categoty.tsx
+## src\components\Breadcrumb.tsx
 
 ```typescript
-import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+interface Breadcrumb {
+  name: string;
+  url: string;
+}
 
-// Тип данных
-type Category = {
-  id: number;
-  title: string;
-  image: string;
-  createdAt: string;
-  updatedAt: string;
-};
+const startBreadcrumb: Breadcrumb[] = [
+  { name: "Main page", url: "/" },
+  { name: "Categories", url: "/categories" },
+];
 
-// Функция для загрузки данных
-const fetchCategories = async (): Promise<Category[]> => {
-  const response = await fetch(
-    "https://pet-shop-backend.fly.dev/categories/all"
+export default function Breadcrumb({
+  additionalBreadcrumb,
+}: {
+  additionalBreadcrumb?: Breadcrumb[];
+}) {
+  const fullBreadcrumb = startBreadcrumb.concat(additionalBreadcrumb || []);
+  return (
+    <div className="flex flex-row mt-10 mb-10">
+      {fullBreadcrumb.map((val, index) => {
+        return (
+          <div className="flex flex-row justify-center items-center flex-wrap">
+            {index !== 0 && <div className="border h-[1px] lg:w-4 w-2"></div>}
+            <div className="border lg:py-2 lg:px-4 py-1 px-2 rounded-md">
+              <Link to={val.url} className="text-small-grey lg:text-[16px] text-[12px]">
+                {val.name}
+              </Link>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
-  if (!response.ok) throw new Error("Failed to fetch categories");
-  return response.json();
+}
+
+```
+
+## src\components\CategotiesComponent.tsx
+
+```typescript
+// import { useQuery } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/config";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "react-router-dom";
+import { nameToSlug } from "@/lib/utils";
+import { setCategories } from "@/lib/db";
+
+// type Category = {
+//   id: number;
+//   title: string;
+//   image: string;
+//   createdAt: string;
+//   updatedAt: string;
+// };
+
+type CategoryProps = {
+  limit?: number;
 };
 
-export default function Category() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["categories"], // Уникальный ключ для запроса
-    queryFn: fetchCategories, // Функция для загрузки данных
-    staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
-  });
+// const fetchCategories = async (): Promise<Category[]> => {
+//   const response = await fetch(`${API_BASE_URL}/categories/all`);
+//   if (!response.ok) throw new Error("Failed to fetch categories");
+//   return response.json();
+// };
 
-  if (isLoading) return <p>Loading...</p>;
+export default function Category({ limit }: CategoryProps) {
+  const { data, isLoading, error } = setCategories();
+  // useQuery({
+  //   queryKey: ["categories"], // Уникальный ключ для запроса
+  //   queryFn: fetchCategories, // Функция для загрузки данных
+  //   staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+  // });
+
+  // if (isLoading) return <p>Loading...</p>;
+
+  if (isLoading) {
+    return (
+      <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {Array.from({ length: limit || 4 }).map((_, index) => (
+          <div key={index} className="flex flex-col justify-center">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-6 w-3/4 mt-4" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (error instanceof Error) return <p>Error: {error.message}</p>;
   if (!data || data.length === 0) return <p>No categories available.</p>;
 
   return (
     <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-      {data.map((category) => (
-        <div key={category.id} className="flex flex-col justify-center">
-          <img
-            src={`https://pet-shop-backend.fly.dev${category.image}`}
-            alt={category.title}
-          />
-          <h3 className="text-center">{category.title}</h3>
-        </div>
+      {data.slice(0, limit ? limit : data.length).map((category) => (
+        <Link
+          to={"/categories/" + nameToSlug(category.title)}
+        >
+          <div key={category.id} className="flex flex-col justify-center">
+            <img src={API_BASE_URL + category.image} alt={category.title} />
+            <h3 className="text-center text-[20px] font-medium leading-[130%] text-[#282828] mt-4">
+              {category.title}
+            </h3>
+          </div>
+        </Link>
       ))}
     </div>
   );
@@ -162,7 +245,7 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="px-2 lg:px-10">
+    <footer className="px-2 lg:px-10 mt-[100px]">
       <h2 className="heading-2">Contact</h2>
       <div className="flex flex-col lg:flex-row gap-8 mt-10">
         <div className="flex flex-col gap-8 w-full lg:min-w-[240px]">
@@ -209,7 +292,7 @@ export default Footer;
 
 ```typescript
 import { Link } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Menu as MenuIco } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -220,23 +303,25 @@ import {
 
 import Logo from "../assets/icons/logo.svg?react";
 import Cart from "../assets/icons/cart.svg?react";
+import { useState } from "react";
 
 const menuItems = [
   { id: 1, label: "Main Page", href: "/" },
   { id: 2, label: "Categories", href: "/categories" },
   { id: 3, label: "All products", href: "/products" },
   { id: 4, label: "All sales", href: "/sales" },
+  { id: 5, label: "Cart", href: "/cart", isMobMenu: true },
 ];
 
 function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
-    <header className="flex flex-row justify-between items-center px-2 lg:px-10 py-6">
-      {/* Логотип */}
+    <header className="flex flex-row justify-between items-center px-2 lg:px-10 py-6 border-b border-gray-300">
       <Link to={"/"}>
         <Logo className="transform transition-transform duration-300 hover:scale-125 hover:rotate-45 hover:brightness-125" />
       </Link>
 
-      {/* Меню для больших экранов */}
       <nav className="hidden md:block">
         <ul className="flex gap-8">
           {menuItems.map((item) => (
@@ -252,22 +337,23 @@ function Header() {
         </ul>
       </nav>
 
-      {/* Иконка корзины */}
       <Link to={"/cart"}>
         <Cart className="transform transition-transform duration-300 hover:scale-125 hover:rotate-12 hover:brightness-125" />
       </Link>
 
-      {/* Гамбургер меню для маленьких экранов */}
-      <DropdownMenu>
+      <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <DropdownMenuTrigger className="md:hidden">
-          <Menu size={52} />
+          <MenuIco size={52} />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48 bg-white shadow-lg">
+        <DropdownMenuContent align="start" className="w-60 bg-white shadow-lg">
           {menuItems.map((item) => (
             <DropdownMenuItem key={item.id}>
               <Link
+                onClick={() => {
+                  setIsMenuOpen(false);
+                }}
                 to={item.href}
-                className="text-txtBlack text-[16px] font-medium leading-[130%] hover:text-hoverBlue"
+                className="text-txtBlack text-[20px] font-medium leading-[130%] hover:text-hoverBlue"
               >
                 {item.label}
               </Link>
@@ -280,6 +366,23 @@ function Header() {
 }
 
 export default Header;
+
+```
+
+## src\components\ScrollToTop.tsx
+
+```typescript
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scroll(0, 0);
+  }, [pathname]);
+  return null;
+}
+
+export default ScrollToTop;
 
 ```
 
@@ -305,7 +408,7 @@ export default function SectionDevider({
   return (
     <div className="flex flex-row items-center justify-center px-2 py-4 mt-20">
       <h2 className="heading-2">{titleName}</h2>
-      <div className="ml-8 h-[1px] w-full bg-slate-300"></div>
+      <div className="md:ml-8 ml-2 h-[1px] w-full bg-slate-300"></div>
       <button
         className="text-nowrap px-4 py-2 text-[16px] text-small-grey border-slate-300 border-solid border rounded-md"
         onClick={() => goToPage(url)}
@@ -321,28 +424,28 @@ export default function SectionDevider({
 ## src\components\ui\dropdown-menu.tsx
 
 ```typescript
-import * as React from "react"
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
-import { Check, ChevronRight, Circle } from "lucide-react"
+import * as React from "react";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import { Check, ChevronRight, Circle } from "lucide-react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-const DropdownMenu = DropdownMenuPrimitive.Root
+const DropdownMenu = DropdownMenuPrimitive.Root;
 
-const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
+const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 
-const DropdownMenuGroup = DropdownMenuPrimitive.Group
+const DropdownMenuGroup = DropdownMenuPrimitive.Group;
 
-const DropdownMenuPortal = DropdownMenuPrimitive.Portal
+const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
 
-const DropdownMenuSub = DropdownMenuPrimitive.Sub
+const DropdownMenuSub = DropdownMenuPrimitive.Sub;
 
-const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
+const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
 const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
-    inset?: boolean
+    inset?: boolean;
   }
 >(({ className, inset, children, ...props }, ref) => (
   <DropdownMenuPrimitive.SubTrigger
@@ -357,9 +460,9 @@ const DropdownMenuSubTrigger = React.forwardRef<
     {children}
     <ChevronRight className="ml-auto" />
   </DropdownMenuPrimitive.SubTrigger>
-))
+));
 DropdownMenuSubTrigger.displayName =
-  DropdownMenuPrimitive.SubTrigger.displayName
+  DropdownMenuPrimitive.SubTrigger.displayName;
 
 const DropdownMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
@@ -373,9 +476,9 @@ const DropdownMenuSubContent = React.forwardRef<
     )}
     {...props}
   />
-))
+));
 DropdownMenuSubContent.displayName =
-  DropdownMenuPrimitive.SubContent.displayName
+  DropdownMenuPrimitive.SubContent.displayName;
 
 const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
@@ -393,13 +496,13 @@ const DropdownMenuContent = React.forwardRef<
       {...props}
     />
   </DropdownMenuPrimitive.Portal>
-))
-DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
+));
+DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
 
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
-    inset?: boolean
+    inset?: boolean;
   }
 >(({ className, inset, ...props }, ref) => (
   <DropdownMenuPrimitive.Item
@@ -411,8 +514,8 @@ const DropdownMenuItem = React.forwardRef<
     )}
     {...props}
   />
-))
-DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
+));
+DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
@@ -434,9 +537,9 @@ const DropdownMenuCheckboxItem = React.forwardRef<
     </span>
     {children}
   </DropdownMenuPrimitive.CheckboxItem>
-))
+));
 DropdownMenuCheckboxItem.displayName =
-  DropdownMenuPrimitive.CheckboxItem.displayName
+  DropdownMenuPrimitive.CheckboxItem.displayName;
 
 const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
@@ -457,13 +560,13 @@ const DropdownMenuRadioItem = React.forwardRef<
     </span>
     {children}
   </DropdownMenuPrimitive.RadioItem>
-))
-DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
+));
+DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName;
 
 const DropdownMenuLabel = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
-    inset?: boolean
+    inset?: boolean;
   }
 >(({ className, inset, ...props }, ref) => (
   <DropdownMenuPrimitive.Label
@@ -475,8 +578,8 @@ const DropdownMenuLabel = React.forwardRef<
     )}
     {...props}
   />
-))
-DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName
+));
+DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
 
 const DropdownMenuSeparator = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
@@ -487,8 +590,8 @@ const DropdownMenuSeparator = React.forwardRef<
     className={cn("-mx-1 my-1 h-px bg-muted", className)}
     {...props}
   />
-))
-DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName
+));
+DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName;
 
 const DropdownMenuShortcut = ({
   className,
@@ -499,9 +602,9 @@ const DropdownMenuShortcut = ({
       className={cn("ml-auto text-xs tracking-widest opacity-60", className)}
       {...props}
     />
-  )
-}
-DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
+  );
+};
+DropdownMenuShortcut.displayName = "DropdownMenuShortcut";
 
 export {
   DropdownMenu,
@@ -519,8 +622,35 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuRadioGroup,
+};
+
+```
+
+## src\components\ui\skeleton.tsx
+
+```typescript
+import { cn } from "@/lib/utils"
+
+function Skeleton({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn("animate-pulse rounded-md bg-primary/10", className)}
+      {...props}
+    />
+  )
 }
 
+export { Skeleton }
+
+```
+
+## src\config.ts
+
+```typescript
+export const API_BASE_URL = "https://pet-shop-backend.fly.dev";
 ```
 
 ## src\index.css
@@ -528,11 +658,12 @@ export {
 ```css
 @layer components {
   .heading-2 {
-    @apply text-txtBlack text-[64px] font-bold leading-[110%];
+    @apply text-txtBlack font-bold leading-[110%];
+    @apply xl:text-[64px] md:text-[40px] text-[30px];
   }
   .heading-3 {
     @apply text-txtBlack font-semibold leading-[110%];
-    @apply xl:text-[40px] text-[30px]; /* Размер шрифта 40px */
+    @apply xl:text-[40px] md:text-[30px] text-[20px];
   }
   .text-small-grey {
     @apply text-txtGrey font-medium leading-[130%] text-[20px];
@@ -542,6 +673,7 @@ export {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -608,14 +740,53 @@ export {
 
 ```
 
+## src\lib\db.ts
+
+```typescript
+import { API_BASE_URL } from "@/config";
+import { useQuery } from "@tanstack/react-query";
+
+type Category = {
+  id: number;
+  title: string;
+  image: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const fetchCategories = async (): Promise<Category[]> => {
+  const response = await fetch(`${API_BASE_URL}/categories/all`);
+  if (!response.ok) throw new Error("Failed to fetch categories");
+  return response.json();
+};
+
+export const setCategories = () => {
+  return useQuery({
+    queryKey: ["categories"], // Уникальный ключ для запроса
+    queryFn: fetchCategories, // Функция для загрузки данных
+    staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+  });
+};
+
+```
+
 ## src\lib\utils.ts
 
 ```typescript
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+// import { useDispatch } from "react-redux";
+// import { addSlug } from "@/redux/slugsSlice";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
+}
+
+export function nameToSlug(name: string) {
+  // const dispatch = useDispatch();
+
+  return name.toLocaleLowerCase().trim().replace("&", "and").replace(/\s+/g, "-");
 }
 
 ```
@@ -629,16 +800,22 @@ import "./index.css";
 import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ScrollToTop from "./components/ScrollToTop.tsx";
+import { Provider } from "react-redux";
+import { store } from "@/redux/store";
 
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ScrollToTop />
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </Provider>
   </StrictMode>
 );
 
@@ -657,17 +834,37 @@ function Cart() {
 export default Cart
 ```
 
-## src\pages\Categories.tsx
+## src\pages\Categorie.tsx
 
 ```typescript
 
-function Categories() {
+function Categorie() {
   return (
-    <div>Categories</div>
+    <div>Categorie</div>
   )
 }
 
-export default Categories
+export default Categorie
+```
+
+## src\pages\Categories.tsx
+
+```typescript
+import Category from "@/components/CategotiesComponent";
+import Breadcrumb from "@/components/Breadcrumb";
+
+function Categories() {
+  return (
+    <div>
+      <Breadcrumb/>
+      <h1 className="heading-2 mb-10">Categories</h1>
+      <Category />
+    </div>
+  );
+}
+
+export default Categories;
+
 ```
 
 ## src\pages\Home.tsx
@@ -675,7 +872,7 @@ export default Categories
 ```typescript
 import { useNavigate } from "react-router-dom";
 import SectionDevider from "../components/SectionDevider";
-import Categoty from "../components/Categoty";
+import Categoty from "../components/CategotiesComponent";
 function Home() {
   const navigate = useNavigate();
 
@@ -702,7 +899,7 @@ function Home() {
         buttonName="All categories"
         url="/categories"
       />
-      <Categoty />
+      <Categoty limit={4}/>
       <SectionDevider titleName="Sale" buttonName="All sales" url="/sales" />
     </>
   );
@@ -771,6 +968,92 @@ function Sales() {
 export default Sales
 ```
 
+## src\redux\slugsSlice.ts
+
+```typescript
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+type Slug = {
+  id: number;
+  slug: string;
+};
+
+type SlugsState = {
+  slugs: Slug[];
+};
+
+const initialState: SlugsState = {
+  slugs: [],
+};
+
+const slugsSlice = createSlice({
+  name: "slugs",
+  initialState,
+  reducers: {
+    addSlug(state, action: PayloadAction<Slug>) {
+      state.slugs.push(action.payload);
+    },
+  },
+});
+
+export const { addSlug } = slugsSlice.actions;
+export default slugsSlice.reducer;
+
+```
+
+## src\redux\store.ts
+
+```typescript
+import { configureStore } from "@reduxjs/toolkit";
+import userReducer from "@/redux/userSlice";
+
+export const store = configureStore({
+  reducer: {
+    user: userReducer,
+  },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+```
+
+## src\redux\userSlice.ts
+
+```typescript
+// src/store/userSlice.ts
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+type UserState = {
+  name: string;
+  loggedIn: boolean;
+};
+
+const initialState: UserState = {
+  name: "",
+  loggedIn: false,
+};
+
+const userSlice = createSlice({
+  name: "user",
+  initialState,
+  reducers: {
+    login(state, action: PayloadAction<string>) {
+      state.name = action.payload;
+      state.loggedIn = true;
+    },
+    logout(state) {
+      state.name = "";
+      state.loggedIn = false;
+    },
+  },
+});
+
+export const { login, logout } = userSlice.actions;
+export default userSlice.reducer;
+
+```
+
 ## src\types\svg.d.ts
 
 ```typescript
@@ -821,7 +1104,7 @@ export default defineConfig({
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>PetShop</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
   </head>
   <body>
