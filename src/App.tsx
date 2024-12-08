@@ -9,8 +9,27 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 import Sales from "./pages/Sales";
+import Categorie from "./pages/Categorie";
+import { useSetCategories } from "@/lib/db";
+import { useDispatch } from "react-redux";
+import { addSlug } from "@/redux/slugsSlice";
+import { nameToSlug } from "./lib/utils";
+
+// import { useDispatch } from "react-redux";
+// import { addSlug } from "@/redux/slugsSlice";
+import { useEffect } from "react";
 
 function App() {
+  const dispatch = useDispatch();
+  const { data, isLoading, error } = useSetCategories();
+  useEffect(() => {
+    console.log(data);
+    if (!error && !isLoading)
+      data?.map((val) => {
+        dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title) }));
+      });
+  }, [data, dispatch]);
+
   return (
     <div className="container min-h-screen flex flex-col justify-between">
       <Header />
@@ -18,9 +37,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/categories" element={<Categories />}>
-            {/* <Route path=":id" element={<Categories id={id} />} /> */}
-          </Route>
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/categories/:categoryName" element={<Categorie />} />
+
           <Route path="/sales" element={<Sales />} />
           <Route path="/products" element={<Products />}>
             <Route path=":id" element={<ProductDetail />} />

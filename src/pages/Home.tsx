@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import SectionDevider from "../components/SectionDevider";
-import Categoty from "../components/Categoties";
+import Categoty from "../components/CategotiesComponent";
 function Home() {
   const navigate = useNavigate();
 
