@@ -24,8 +24,8 @@ function App() {
   const { data, isLoading, error } = useSetCategories();
   useEffect(() => {
     console.log(data);
-    if (data)
-      data.map((val) => {
+    if (!error && !isLoading)
+      data?.map((val) => {
         dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title) }));
       });
   }, [data, dispatch]);
