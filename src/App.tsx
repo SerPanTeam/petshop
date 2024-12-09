@@ -10,7 +10,7 @@ import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 import Sales from "./pages/Sales";
 import Categorie from "./pages/Categorie";
-import { useSetCategories } from "@/lib/db";
+import { useSetCategories } from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { addSlug } from "@/redux/slugsSlice";
 import { nameToSlug } from "./lib/utils";
@@ -23,12 +23,18 @@ function App() {
   const dispatch = useDispatch();
   const { data, isLoading, error } = useSetCategories();
   useEffect(() => {
-    console.log(data);
-    if (!error && !isLoading)
+    console.log(data, error, isLoading);
+    if (!error && !isLoading && Array.isArray(data))
       data?.map((val) => {
         dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title) }));
       });
-  }, [data, dispatch]);
+  }, [data, dispatch, isLoading, error]);
+
+    // Пока данные загружаются, отображаем индикатор загрузки
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
+  
 
   return (
     <div className="container min-h-screen flex flex-col justify-between">

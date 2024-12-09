@@ -21,6 +21,8 @@
 │   │   ├── CategotiesComponent.tsx
 │   │   ├── Footer.tsx
 │   │   ├── Header.tsx
+│   │   ├── PreData.tsx
+│   │   ├── ProductsComponent.tsx
 │   │   ├── ScrollToTop.tsx
 │   │   └── SectionDevider.tsx
 │   ├── lib
@@ -83,15 +85,31 @@ import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 import Sales from "./pages/Sales";
 import Categorie from "./pages/Categorie";
+import { useSetCategories } from "@/lib/db";
+import { useDispatch } from "react-redux";
+import { addSlug } from "@/redux/slugsSlice";
+import { nameToSlug } from "./lib/utils";
 
 // import { useDispatch } from "react-redux";
 // import { addSlug } from "@/redux/slugsSlice";
 import { useEffect } from "react";
 
 function App() {
+  const dispatch = useDispatch();
+  const { data, isLoading, error } = useSetCategories();
   useEffect(() => {
+    console.log(data, error, isLoading);
+    if (!error && !isLoading && Array.isArray(data))
+      data?.map((val) => {
+        dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title) }));
+      });
+  }, [data, dispatch, isLoading, error]);
 
-  }, []);
+    // Пока данные загружаются, отображаем индикатор загрузки
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
+  
 
   return (
     <div className="container min-h-screen flex flex-col justify-between">
@@ -143,10 +161,16 @@ export default function Breadcrumb({
     <div className="flex flex-row mt-10 mb-10">
       {fullBreadcrumb.map((val, index) => {
         return (
-          <div className="flex flex-row justify-center items-center flex-wrap">
+          <div
+            key={index}
+            className="flex flex-row justify-center items-center flex-wrap"
+          >
             {index !== 0 && <div className="border h-[1px] lg:w-4 w-2"></div>}
             <div className="border lg:py-2 lg:px-4 py-1 px-2 rounded-md">
-              <Link to={val.url} className="text-small-grey lg:text-[16px] text-[12px]">
+              <Link
+                to={val.url}
+                className="text-small-grey lg:text-[16px] text-[12px]"
+              >
                 {val.name}
               </Link>
             </div>
@@ -162,63 +186,24 @@ export default function Breadcrumb({
 ## src\components\CategotiesComponent.tsx
 
 ```typescript
-// import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { nameToSlug } from "@/lib/utils";
-import { setCategories } from "@/lib/db";
-
-// type Category = {
-//   id: number;
-//   title: string;
-//   image: string;
-//   createdAt: string;
-//   updatedAt: string;
-// };
+import { useSetCategories } from "@/lib/db";
+import PreData from "./PreData";
 
 type CategoryProps = {
   limit?: number;
 };
 
-// const fetchCategories = async (): Promise<Category[]> => {
-//   const response = await fetch(`${API_BASE_URL}/categories/all`);
-//   if (!response.ok) throw new Error("Failed to fetch categories");
-//   return response.json();
-// };
-
 export default function Category({ limit }: CategoryProps) {
-  const { data, isLoading, error } = setCategories();
-  // useQuery({
-  //   queryKey: ["categories"], // Уникальный ключ для запроса
-  //   queryFn: fetchCategories, // Функция для загрузки данных
-  //   staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
-  // });
-
-  // if (isLoading) return <p>Loading...</p>;
-
-  if (isLoading) {
-    return (
-      <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {Array.from({ length: limit || 4 }).map((_, index) => (
-          <div key={index} className="flex flex-col justify-center">
-            <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-6 w-3/4 mt-4" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (error instanceof Error) return <p>Error: {error.message}</p>;
-  if (!data || data.length === 0) return <p>No categories available.</p>;
+  const { data, isLoading, error } = useSetCategories();
+  <PreData limit={limit} data={data} isLoading={isLoading} error={error} />;
 
   return (
     <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-      {data.slice(0, limit ? limit : data.length).map((category) => (
-        <Link
-          to={"/categories/" + nameToSlug(category.title)}
-        >
+      {data?.slice(0, limit ? limit : data.length).map((category) => (
+        <Link to={"/categories/" + nameToSlug(category.title)}>
           <div key={category.id} className="flex flex-col justify-center">
             <img src={API_BASE_URL + category.image} alt={category.title} />
             <h3 className="text-center text-[20px] font-medium leading-[130%] text-[#282828] mt-4">
@@ -366,6 +351,68 @@ function Header() {
 }
 
 export default Header;
+
+```
+
+## src\components\PreData.tsx
+
+```typescript
+import { Skeleton } from "@/components/ui/skeleton";
+import { Category, ProductInCategory } from "@/lib/db";
+
+function PreData({
+  isLoading,
+  limit,
+  error,
+  data,
+}: {
+  isLoading: boolean;
+  limit?: number;
+  error: Error | null;
+  data: Category[] | ProductInCategory[] | undefined;
+}) {
+  if (isLoading) {
+    return (
+      <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {Array.from({ length: limit || 4 }).map((_, index) => (
+          <div key={index} className="flex flex-col justify-center">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-6 w-3/4 mt-4" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error instanceof Error) return <p>Error: {error.message}</p>;
+  //   if (!data || data.length === 0) return <p>No data available.</p>;
+  if (!data) return <p>No data available.</p>;
+}
+
+export default PreData;
+
+```
+
+## src\components\ProductsComponent.tsx
+
+```typescript
+import { Product } from "@/lib/db";
+
+type ProductsComponentProps = {
+  products?: Product[];
+};
+
+function ProductsComponent({ products }: ProductsComponentProps) {
+  return (
+    <div>
+      {products?.map((val) => {
+        return val.title;
+      })}
+    </div>
+  );
+}
+
+export default ProductsComponent;
 
 ```
 
@@ -746,12 +793,29 @@ export const API_BASE_URL = "https://pet-shop-backend.fly.dev";
 import { API_BASE_URL } from "@/config";
 import { useQuery } from "@tanstack/react-query";
 
-type Category = {
+export type Category = {
   id: number;
   title: string;
   image: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type Product = {
+  id: number;
+  title: string;
+  price: number;
+  discont_price: number;
+  description: string;
+  image: string;
+  createdAt: string;
+  updatedAt: string;
+  categoryId: number;
+};
+
+export type ProductInCategory = {
+  category: Category;
+  data: Product[];
 };
 
 const fetchCategories = async (): Promise<Category[]> => {
@@ -760,10 +824,26 @@ const fetchCategories = async (): Promise<Category[]> => {
   return response.json();
 };
 
-export const setCategories = () => {
+export const useSetCategories = () => {
   return useQuery({
     queryKey: ["categories"], // Уникальный ключ для запроса
     queryFn: fetchCategories, // Функция для загрузки данных
+    staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+  });
+};
+
+const fetchProductsByCategorieId = async (
+  id: number | undefined
+): Promise<ProductInCategory[]> => {
+  const response = await fetch(`${API_BASE_URL}/categories/${id}`);
+  if (!response.ok) throw new Error("Failed to fetch categories");
+  return response.json();
+};
+
+export const useFetchProductsByCategorieId = (id: number | undefined) => {
+  return useQuery({
+    queryKey: ["categories"], // Уникальный ключ для запроса
+    queryFn: () => fetchProductsByCategorieId(id), // Функция для загрузки данных
     staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
   });
 };
@@ -837,14 +917,42 @@ export default Cart
 ## src\pages\Categorie.tsx
 
 ```typescript
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { useLocation } from "react-router-dom";
+import { useFetchProductsByCategorieId } from "@/lib/db";
+import PreData from "@/components/PreData";
 
 function Categorie() {
+  const slugs = useSelector((state: RootState) => state.slugs.slugs);
+  const { pathname } = useLocation();
+  const catId = slugs.find((val) => val.slug == pathname.split("/").pop())?.id;
+  console.log(slugs);
+  const { data, isLoading, error } = useFetchProductsByCategorieId(catId);
+
+  // Простая проверка на загрузку или пустой `slugs`
+  if (!slugs.length || isLoading) {
+    return (
+      <PreData limit={0} data={data} isLoading={isLoading} error={error} />
+    );
+  }
+
+  // Проверка на ошибки
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
   return (
-    <div>Categorie</div>
-  )
+    <>
+      <div>Categorie</div>
+      {console.log(slugs)}
+      {catId}
+    </>
+  );
 }
 
-export default Categorie
+export default Categorie;
+
 ```
 
 ## src\pages\Categories.tsx
@@ -1006,10 +1114,12 @@ export default slugsSlice.reducer;
 ```typescript
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "@/redux/userSlice";
+import slugsReduser from "@/redux/slugsSlice";
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
+    slugs: slugsReduser,
   },
 });
 

@@ -1,4 +1,4 @@
-import Category from "@/components/CategotiesComponent";
+import CategotiesComponent from "@/components/CategotiesComponent";
 import Breadcrumb from "@/components/Breadcrumb";
 
 function Categories() {
@@ -6,7 +6,7 @@ function Categories() {
     <div>
       <Breadcrumb/>
       <h1 className="heading-2 mb-10">Categories</h1>
-      <Category />
+      <CategotiesComponent />
     </div>
   );
 }

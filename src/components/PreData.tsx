@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Category, ProductInCategory } from "@/lib/db";
+import { Category, ProductInCategory } from "@/lib/api";
 
 function PreData({
   isLoading,
