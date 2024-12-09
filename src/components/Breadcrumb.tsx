@@ -24,10 +24,14 @@ export default function Breadcrumb({
             className="flex flex-row justify-center items-center flex-wrap"
           >
             {index !== 0 && <div className="border h-[1px] lg:w-4 w-2"></div>}
-            <div className="border lg:py-2 lg:px-4 py-1 px-2 rounded-md">
+            <div className="border lg:py-2 lg:px-4 py-1 px-2 rounded-md hover:bg-gray-50">
               <Link
                 to={val.url}
-                className="text-small-grey lg:text-[16px] text-[12px]"
+                className={`${
+                  index !== fullBreadcrumb.length-1
+                    ? "text-small-grey"
+                    : "text-black"
+                } lg:text-[16px] text-[12px]`}
               >
                 {val.name}
               </Link>

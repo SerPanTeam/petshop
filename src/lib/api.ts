@@ -42,7 +42,7 @@ export const useSetCategories = () => {
 
 const fetchProductsByCategorieId = async (
   id: number | undefined
-): Promise<ProductInCategory[]> => {
+): Promise<ProductInCategory> => {
   const url = `${API_BASE_URL}/categories/${id}`;
   console.log(url);
   const response = await fetch(`${API_BASE_URL}/categories/${id}`);
