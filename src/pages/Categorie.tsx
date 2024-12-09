@@ -3,6 +3,7 @@ import { RootState } from "@/redux/store";
 import { useLocation } from "react-router-dom";
 import { useFetchProductsByCategorieId } from "@/lib/api";
 import PreData from "@/components/PreData";
+import Breadcrumb from "@/components/Breadcrumb";
 
 function Categorie() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
@@ -30,7 +31,8 @@ function Categorie() {
 
   return (
     <>
-      <div>Categorie</div>
+    <Breadcrumb additionalBreadcrumb={{name:data?.category?.title, url:pathname}}/>
+      <h1 className="heading-2">{data?.category?.title}</h1>
       {console.log(JSON.stringify(data, null, 2))}
       {catId}
     </>
