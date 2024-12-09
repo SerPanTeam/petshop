@@ -43,6 +43,8 @@ export const useSetCategories = () => {
 const fetchProductsByCategorieId = async (
   id: number | undefined
 ): Promise<ProductInCategory[]> => {
+  const url = `${API_BASE_URL}/categories/${id}`;
+  console.log(url);
   const response = await fetch(`${API_BASE_URL}/categories/${id}`);
   if (!response.ok) throw new Error("Failed to fetch categories");
   return response.json();
@@ -50,8 +52,9 @@ const fetchProductsByCategorieId = async (
 
 export const useFetchProductsByCategorieId = (id: number | undefined) => {
   return useQuery({
-    queryKey: ["categories"], // Уникальный ключ для запроса
+    queryKey: ["categorieByID", id], // Уникальный ключ для запроса
     queryFn: () => fetchProductsByCategorieId(id), // Функция для загрузки данных
     staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+    enabled: typeof id === "number",
   });
 };

@@ -14,44 +14,41 @@ import { useSetCategories } from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { addSlug } from "@/redux/slugsSlice";
 import { nameToSlug } from "./lib/utils";
+import PreData from "@/components/PreData";
 
-// import { useDispatch } from "react-redux";
-// import { addSlug } from "@/redux/slugsSlice";
 import { useEffect } from "react";
 
 function App() {
   const dispatch = useDispatch();
-  const { data, isLoading, error } = useSetCategories();
+  const { data, isLoading, error, isFetched } = useSetCategories();
   useEffect(() => {
-    console.log(data, error, isLoading);
+   // console.log(data, error, isLoading);
     if (!error && !isLoading && Array.isArray(data))
       data?.map((val) => {
         dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title) }));
       });
-  }, [data, dispatch, isLoading, error]);
-
-    // Пока данные загружаются, отображаем индикатор загрузки
-    if (isLoading) {
-      return <div>Loading...</div>;
-    }
-  
+  }, [data, dispatch, isFetched, error, isLoading]);
 
   return (
     <div className="container min-h-screen flex flex-col justify-between">
       <Header />
       <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/categories/:categoryName" element={<Categorie />} />
+        {isLoading ? (
+          <PreData limit={0} data={data} isLoading={isLoading} error={error} />
+        ) : (
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/categories/:categoryName" element={<Categorie />} />
 
-          <Route path="/sales" element={<Sales />} />
-          <Route path="/products" element={<Products />}>
-            <Route path=":id" element={<ProductDetail />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="/sales" element={<Sales />} />
+            <Route path="/products" element={<Products />}>
+              <Route path=":id" element={<ProductDetail />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        )}
       </main>
       <Footer />
     </div>

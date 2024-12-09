@@ -18,7 +18,8 @@ const slugsSlice = createSlice({
   initialState,
   reducers: {
     addSlug(state, action: PayloadAction<Slug>) {
-      state.slugs.push(action.payload);
+      if (!state.slugs.some((slug) => slug.id === action.payload.id))
+          state.slugs.push(action.payload);
     },
   },
 });

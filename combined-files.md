@@ -26,7 +26,7 @@
 │   │   ├── ScrollToTop.tsx
 │   │   └── SectionDevider.tsx
 │   ├── lib
-│   │   ├── db.ts
+│   │   ├── api.ts
 │   │   └── utils.ts
 │   ├── pages
 │   │   ├── Cart.tsx
@@ -85,48 +85,45 @@ import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 import Sales from "./pages/Sales";
 import Categorie from "./pages/Categorie";
-import { useSetCategories } from "@/lib/db";
+import { useSetCategories } from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { addSlug } from "@/redux/slugsSlice";
 import { nameToSlug } from "./lib/utils";
+import PreData from "@/components/PreData";
 
-// import { useDispatch } from "react-redux";
-// import { addSlug } from "@/redux/slugsSlice";
 import { useEffect } from "react";
 
 function App() {
   const dispatch = useDispatch();
-  const { data, isLoading, error } = useSetCategories();
+  const { data, isLoading, error, isFetched } = useSetCategories();
   useEffect(() => {
     console.log(data, error, isLoading);
     if (!error && !isLoading && Array.isArray(data))
       data?.map((val) => {
         dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title) }));
       });
-  }, [data, dispatch, isLoading, error]);
-
-    // Пока данные загружаются, отображаем индикатор загрузки
-    if (isLoading) {
-      return <div>Loading...</div>;
-    }
-  
+  }, [data, dispatch, isFetched, error, isLoading]);
 
   return (
     <div className="container min-h-screen flex flex-col justify-between">
       <Header />
       <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/categories/:categoryName" element={<Categorie />} />
+        {isLoading ? (
+          <PreData limit={0} data={data} isLoading={isLoading} error={error} />
+        ) : (
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/categories/:categoryName" element={<Categorie />} />
 
-          <Route path="/sales" element={<Sales />} />
-          <Route path="/products" element={<Products />}>
-            <Route path=":id" element={<ProductDetail />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="/sales" element={<Sales />} />
+            <Route path="/products" element={<Products />}>
+              <Route path=":id" element={<ProductDetail />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        )}
       </main>
       <Footer />
     </div>
@@ -189,7 +186,7 @@ export default function Breadcrumb({
 import { API_BASE_URL } from "@/config";
 import { Link } from "react-router-dom";
 import { nameToSlug } from "@/lib/utils";
-import { useSetCategories } from "@/lib/db";
+import { useSetCategories } from "@/lib/api";
 import PreData from "./PreData";
 
 type CategoryProps = {
@@ -197,14 +194,19 @@ type CategoryProps = {
 };
 
 export default function Category({ limit }: CategoryProps) {
+  //const dispatch = useDispatch();
   const { data, isLoading, error } = useSetCategories();
-  <PreData limit={limit} data={data} isLoading={isLoading} error={error} />;
+
+  <PreData limit={0} data={data} isLoading={isLoading} error={error} />;
 
   return (
     <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
       {data?.slice(0, limit ? limit : data.length).map((category) => (
-        <Link to={"/categories/" + nameToSlug(category.title)}>
-          <div key={category.id} className="flex flex-col justify-center">
+        <Link
+          key={category.id}
+          to={"/categories/" + nameToSlug(category.title)}
+        >
+          <div className="flex flex-col justify-center">
             <img src={API_BASE_URL + category.image} alt={category.title} />
             <h3 className="text-center text-[20px] font-medium leading-[130%] text-[#282828] mt-4">
               {category.title}
@@ -358,7 +360,7 @@ export default Header;
 
 ```typescript
 import { Skeleton } from "@/components/ui/skeleton";
-import { Category, ProductInCategory } from "@/lib/db";
+import { Category, ProductInCategory } from "@/lib/api";
 
 function PreData({
   isLoading,
@@ -396,7 +398,7 @@ export default PreData;
 ## src\components\ProductsComponent.tsx
 
 ```typescript
-import { Product } from "@/lib/db";
+import { Product } from "@/lib/api";
 
 type ProductsComponentProps = {
   products?: Product[];
@@ -787,7 +789,7 @@ export const API_BASE_URL = "https://pet-shop-backend.fly.dev";
 
 ```
 
-## src\lib\db.ts
+## src\lib\api.ts
 
 ```typescript
 import { API_BASE_URL } from "@/config";
@@ -856,15 +858,12 @@ export const useFetchProductsByCategorieId = (id: number | undefined) => {
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-// import { useDispatch } from "react-redux";
-// import { addSlug } from "@/redux/slugsSlice";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export function nameToSlug(name: string) {
-  // const dispatch = useDispatch();
 
   return name.toLocaleLowerCase().trim().replace("&", "and").replace(/\s+/g, "-");
 }
@@ -920,7 +919,7 @@ export default Cart
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useLocation } from "react-router-dom";
-import { useFetchProductsByCategorieId } from "@/lib/db";
+import { useFetchProductsByCategorieId } from "@/lib/api";
 import PreData from "@/components/PreData";
 
 function Categorie() {
@@ -930,22 +929,20 @@ function Categorie() {
   console.log(slugs);
   const { data, isLoading, error } = useFetchProductsByCategorieId(catId);
 
-  // Простая проверка на загрузку или пустой `slugs`
   if (!slugs.length || isLoading) {
     return (
       <PreData limit={0} data={data} isLoading={isLoading} error={error} />
     );
   }
 
-  // Проверка на ошибки
   if (error) {
     return <div>Error: {error.message}</div>;
   }
 
   return (
     <>
-      <div>Categorie</div>
-      {console.log(slugs)}
+    <div>Categorie</div>
+      {console.log(data)}
       {catId}
     </>
   );
@@ -958,15 +955,19 @@ export default Categorie;
 ## src\pages\Categories.tsx
 
 ```typescript
-import Category from "@/components/CategotiesComponent";
+import CategotiesComponent from "@/components/CategotiesComponent";
 import Breadcrumb from "@/components/Breadcrumb";
 
+
 function Categories() {
+
+
   return (
     <div>
-      <Breadcrumb/>
+      <Breadcrumb />
       <h1 className="heading-2 mb-10">Categories</h1>
-      <Category />
+
+      <CategotiesComponent />
     </div>
   );
 }
@@ -1099,7 +1100,8 @@ const slugsSlice = createSlice({
   initialState,
   reducers: {
     addSlug(state, action: PayloadAction<Slug>) {
-      state.slugs.push(action.payload);
+      if(!state.slugs.includes(action.payload))
+          state.slugs.push(action.payload);
     },
   },
 });
