@@ -2,11 +2,18 @@ import { Product } from "@/lib/api";
 import { Link } from "react-router-dom";
 import { nameToSlug } from "@/lib/utils";
 import { API_BASE_URL } from "@/config";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+
+import { getProcent } from "@/lib/utils";
 
 function Products({ products }: { products: Product[] }) {
-  function getProcent(fullPrice: number, curPrice: number) {
-    return Math.round(100 - (curPrice * 100) / fullPrice);
+  const slugs = useSelector((state: RootState) => state.slugs.slugs);
+
+  if (!slugs.length) {
+    return <div>Loading slugs...</div>;
   }
+
 
   function onButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation(); // Останавливаем всплытие события
@@ -14,14 +21,23 @@ function Products({ products }: { products: Product[] }) {
     console.log("Добавлено в корзину!");
   }
 
+  function getCatSlugByProdID(prodId: number) {
+    console.log(slugs);
+    const catID = slugs.filter((val) => val.id == prodId && val.catId > 0)[0].catId;
+    return slugs.filter(val=>val.id == catID && val.catId==0)[0].slug;
+  }
+
   return (
     <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
       {products.map((val) => {
         return (
-          <Link key={val.id} to={"/products/" + nameToSlug(val.title)}>
+          <Link
+            key={val.id}
+            to={`/categories/${getCatSlugByProdID(val.id)}/${nameToSlug(val.title)}`}
+          >
             <div className="flex flex-col justify-center border rounded-md items-center gap-5">
               <div className="relative group w-full lg:h-72 md:h-56 h-56 overflow-hidden">
-              {/* <div className="relative group"> */}
+                {/* <div className="relative group"> */}
                 <img
                   className="w-full object-cover h-full"
                   src={API_BASE_URL + val.image}

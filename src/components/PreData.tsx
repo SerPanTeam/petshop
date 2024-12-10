@@ -10,7 +10,7 @@ function PreData({
   isLoading: boolean;
   limit?: number;
   error: Error | null;
-  data: Category[] | ProductInCategory[] | undefined;
+  data?: Category[] | ProductInCategory[] | undefined;
 }) {
   if (isLoading) {
     return (

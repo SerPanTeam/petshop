@@ -86,31 +86,94 @@ import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 import Sales from "./pages/Sales";
 import Categorie from "./pages/Categorie";
-import { useSetCategories } from "@/lib/api";
+import { useSetCategories, useSetProducts } from "@/lib/api";
 import { useDispatch } from "react-redux";
-import { addSlug } from "@/redux/slugsSlice";
+import { addSlugs } from "@/redux/slugsSlice";
 import { nameToSlug } from "./lib/utils";
 import PreData from "@/components/PreData";
-
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function App() {
   const dispatch = useDispatch();
-  const { data, isLoading, error, isFetched } = useSetCategories();
+  // const { data, isLoading, error, isFetched } = useSetCategories();
+  // useEffect(() => {
+  //   // console.log(data, error, isLoading);
+  //   if (!error && !isLoading && Array.isArray(data))
+  //     data?.map((val) => {
+  //       dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title), title: val.title, catId: 0 }));
+  //     });
+  // }, [data, dispatch, isFetched, error, isLoading]);
+
+  // Загрузка категорий
+  const {
+    data: categoriesData,
+    isLoading: isLoadingCategories,
+    error: errorCategories,
+    // isFetched: isFetchedCategories,
+  } = useSetCategories();
+
+  // Загрузка продуктов
+  const {
+    data: productsData,
+    isLoading: isLoadingProducts,
+    error: errorProducts,
+    // isFetched: isFetchedProducts,
+  } = useSetProducts();
+
+  const [slugsDispatched, setSlugsDispatched] = useState(false);
+
   useEffect(() => {
-    // console.log(data, error, isLoading);
-    if (!error && !isLoading && Array.isArray(data))
-      data?.map((val) => {
-        dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title) }));
-      });
-  }, [data, dispatch, isFetched, error, isLoading]);
+    if (
+      !errorCategories &&
+      !isLoadingCategories &&
+      Array.isArray(categoriesData) &&
+      !errorProducts &&
+      !isLoadingProducts &&
+      Array.isArray(productsData)
+    ) {
+      // Генерация slugs для категорий
+      const categorySlugs = categoriesData.map((category) => ({
+        id: category.id,
+        slug: nameToSlug(category.title),
+        title: category.title,
+        catId: 0,
+        type: "category" as const,
+      }));
+
+      // Генерация slugs для продуктов
+      const productSlugs = productsData.map((product) => ({
+        id: product.id,
+        slug: nameToSlug(product.title),
+        title: product.title,
+        catId: product.categoryId,
+        type: "product" as const,
+      }));
+
+      // Диспатч slugs в Redux
+      dispatch(addSlugs([...categorySlugs, ...productSlugs]));
+      setSlugsDispatched(true);
+    }
+  }, [
+    categoriesData,
+    isLoadingCategories,
+    errorCategories,
+    productsData,
+    isLoadingProducts,
+    errorProducts,
+    dispatch,
+  ]);
+
+  // Проверка загрузки slugs
+  const isLoading =
+    isLoadingCategories || isLoadingProducts || !slugsDispatched;
+  const error = errorCategories || errorProducts;
 
   return (
     <div className="container min-h-screen flex flex-col justify-between">
       <Header />
       <main>
         {isLoading ? (
-          <PreData limit={0} data={data} isLoading={isLoading} error={error} />
+          <PreData limit={0} isLoading={isLoading} error={error} />
         ) : (
           <Routes>
             <Route path="/" element={<Home />} />
@@ -120,7 +183,11 @@ function App() {
 
             <Route path="/sales" element={<Sales />} />
             <Route path="/products" element={<Products />} />
-            <Route path="/products/:productName" element={<ProductDetail />} />
+            {/* <Route path="/products/:productName" element={<ProductDetail />} /> */}
+            <Route
+              path="/categories/:categoryName/:productName"
+              element={<ProductDetail />}
+            />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -375,7 +442,7 @@ function PreData({
   isLoading: boolean;
   limit?: number;
   error: Error | null;
-  data: Category[] | ProductInCategory[] | undefined;
+  data?: Category[] | ProductInCategory[] | undefined;
 }) {
   if (isLoading) {
     return (
@@ -406,8 +473,16 @@ import { Product } from "@/lib/api";
 import { Link } from "react-router-dom";
 import { nameToSlug } from "@/lib/utils";
 import { API_BASE_URL } from "@/config";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 function Products({ products }: { products: Product[] }) {
+  const slugs = useSelector((state: RootState) => state.slugs.slugs);
+
+  if (!slugs.length) {
+    return <div>Loading slugs...</div>;
+  }
+
   function getProcent(fullPrice: number, curPrice: number) {
     return Math.round(100 - (curPrice * 100) / fullPrice);
   }
@@ -418,15 +493,25 @@ function Products({ products }: { products: Product[] }) {
     console.log("Добавлено в корзину!");
   }
 
+  function getCatSlugByProdID(prodId: number) {
+    console.log(slugs);
+    const catID = slugs.filter((val) => val.id == prodId && val.catId > 0)[0].catId;
+    return slugs.filter(val=>val.id == catID && val.catId==0)[0].slug;
+  }
+
   return (
     <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
       {products.map((val) => {
         return (
-          <Link key={val.id} to={"/products/" + nameToSlug(val.title)}>
+          <Link
+            key={val.id}
+            to={`/categories/${getCatSlugByProdID(val.id)}/${nameToSlug(val.title)}`}
+          >
             <div className="flex flex-col justify-center border rounded-md items-center gap-5">
-              <div className="relative group">
+              <div className="relative group w-full lg:h-72 md:h-56 h-56 overflow-hidden">
+                {/* <div className="relative group"> */}
                 <img
-                  className="w-full h-full object-cover"
+                  className="w-full object-cover h-full"
                   src={API_BASE_URL + val.image}
                   alt={val.title}
                 />
@@ -910,8 +995,8 @@ export const useSetCategories = () => {
 const fetchProductsByCategorieId = async (
   id: number | undefined
 ): Promise<ProductInCategory> => {
-  const url = `${API_BASE_URL}/categories/${id}`;
-  console.log(url);
+  //const url = `${API_BASE_URL}/categories/${id}`;
+ //console.log(url);
   const response = await fetch(`${API_BASE_URL}/categories/${id}`);
   if (!response.ok) throw new Error("Failed to fetch categories");
   return response.json();
@@ -926,7 +1011,6 @@ export const useFetchProductsByCategorieId = (id: number | undefined) => {
   });
 };
 
-
 const fetchProducts = async (): Promise<Product[]> => {
   const response = await fetch(`${API_BASE_URL}/products/all`);
   if (!response.ok) throw new Error("Failed to fetch products");
@@ -940,6 +1024,33 @@ export const useSetProducts = () => {
     staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
   });
 };
+
+const fetchProductById = async (
+  id: number | undefined
+): Promise<Product> => {
+  //console.log(url);
+  const response = await fetch(`${API_BASE_URL}/products/${id}`);
+  if (!response.ok) throw new Error("Failed to fetch product");
+  // return response.json();
+
+  const data: Product[] = await response.json();
+  
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error("Product not found");
+  }
+  
+  return data[0]; // Возвращаем первый элемент массива
+};
+
+export const useFetchProductById = (id: number | undefined) => {
+  return useQuery({
+    queryKey: ["productByID", id], // Уникальный ключ для запроса
+    queryFn: () => fetchProductById(id), // Функция для загрузки данных
+    staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+    enabled: typeof id === "number",
+  });
+};
+
 ```
 
 ## src\lib\utils.ts
@@ -1113,7 +1224,7 @@ function Home() {
       />
       <Categoty limit={4}/>
       <SectionDevider titleName="Sale" buttonName="All sales" url="/sales" />
-      <Products limit={4} isIncludeHead={false} isSalesProducts={true}/>
+      <Products limit={4} isIncludeHead={false} isSalesProducts={true} isIncludeFilters={false}/>
     </>
   );
 }
@@ -1146,52 +1257,122 @@ export default NotFound;
 ## src\pages\ProductDetail.tsx
 
 ```typescript
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { useLocation } from "react-router-dom";
+import PreData from "@/components/PreData";
+import { useFetchProductById } from "@/lib/api";
+import Breadcrumb from "@/components/Breadcrumb";
+import { API_BASE_URL } from "@/config";
 
 function ProductDetail() {
+  const slugs = useSelector((state: RootState) => state.slugs.slugs);
+  const { pathname } = useLocation();
+  const prodSlug = pathname.split("/").pop();
+
+  const prod = slugs.find((val) => val.slug === prodSlug && val.catId > 0);
+  const prodId = prod?.id;
+
+  const catId = slugs.find((val) => val.id == prodId && val.catId > 0)?.catId;
+  const category = slugs.find((val) => val.id == catId && val.catId == 0);
+  console.log(category);
+
+  const { data, isLoading, error } = useFetchProductById(prodId);
+
+  // if (!slugs.length) {
+  //   return <div>Loading slugs...</div>;
+  // }
+
+  if (isLoading) {
+    return (
+      <PreData limit={0} data={data} isLoading={isLoading} error={error} />
+    );
+  }
+
+  console.log(data);
   return (
-    <div>ProductDetail</div>
-  )
+    <div>
+      <Breadcrumb
+        additionalBreadcrumb={[
+          { name: category?.title, url: "/categories/" + category?.slug },
+          {
+            name: prod?.title,
+            url: "/categories/" + category?.slug + "/" + prod?.slug,
+          },
+        ]}
+      />
+      <div className="flex lg:flex-row flex-col gap-16">
+        <div className="lg:w-1/2">
+          <img
+            src={API_BASE_URL + data?.image}
+            alt={data?.title}
+            className="w-full h-auto object-cover rounded-md"
+          />
+        </div>
+
+        <div className="flex flex-col lg:w-1/2">
+          <h1 className="heading-2">{data?.title}</h1>
+          <h3>Description</h3>
+          <p>{data?.description}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export default ProductDetail
+export default ProductDetail;
+
 ```
 
 ## src\pages\Products.tsx
 
 ```typescript
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
-//import { useLocation } from "react-router-dom";
+// import { useSelector } from "react-redux";
+// import { RootState } from "@/redux/store";
 import { useSetProducts } from "@/lib/api";
 import PreData from "@/components/PreData";
 import Breadcrumb from "@/components/Breadcrumb";
 import ProductsComponent from "@/components/ProductsComponent";
-import { Product } from "@/lib/api";
+// import { useEffect } from "react";
+// import { useDispatch } from "react-redux";
+// import { addSlug } from "@/redux/slugsSlice";
+// import { nameToSlug } from "@/lib/utils";
 
 type ProductsComponentProps = {
   isIncludeHead?: boolean;
   limit?: number;
   isSalesProducts?: boolean;
+  isIncludeFilters?: boolean;
 };
 
 function Products({
   isIncludeHead = true,
   limit = 0,
   isSalesProducts = false,
+  isIncludeFilters = true,
 }: ProductsComponentProps) {
-  const slugs = useSelector((state: RootState) => state.slugs.slugs);
+  // const slugs = useSelector((state: RootState) => state.slugs.slugs);
   // const { pathname } = useLocation();
 
   // const catSlug = pathname.split("/").pop();
   // const catId = slugs.find((val) => val.slug === catSlug)?.id;
 
-  const { data, isLoading, error } = useSetProducts();
+  const { data, isLoading, error, isFetched } = useSetProducts();
+  // const dispatch = useDispatch();
 
-  if (!slugs.length) {
-    return <div>Loading slugs...</div>;
-  }
+  // useEffect(() => {
+  //   // console.log(data, error, isLoading);
+  //   if (!error && !isLoading && Array.isArray(data))
+  //     data?.map((val) => {
+  //       dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title), title: val.title, catId: val.categoryId}));
+  //     });
+  // }, [data, dispatch, isFetched, error, isLoading]);
 
-  if (isLoading) {
+  // if (!slugs.length) {
+  //   return <div>Loading slugs...</div>;
+  // }
+
+  if (isLoading||!isFetched) {
     return (
       <PreData limit={0} data={data} isLoading={isLoading} error={error} />
     );
@@ -1220,6 +1401,7 @@ function Products({
           <h1 className="heading-2 mb-10">All products</h1>
         </>
       )}
+      {isIncludeFilters && <p>FILTERS</p>}
       <ProductsComponent products={viewData} />
     </>
   );
@@ -1232,13 +1414,28 @@ export default Products;
 ## src\pages\Sales.tsx
 
 ```typescript
+import Products from "./Products";
+import Breadcrumb from "@/components/Breadcrumb";
+
 function Sales() {
   return (
-    <div>Sales</div>
-  )
+    <>
+      <Breadcrumb
+        additionalBreadcrumb={[{ name: "All sales", url: "/sales" }]}
+      />
+      <h1 className="heading-2 mb-10">Discounted items</h1>
+      <Products
+        limit={0}
+        isIncludeHead={false}
+        isSalesProducts={true}
+        isIncludeFilters={true}
+      />
+    </>
+  );
 }
 
-export default Sales
+export default Sales;
+
 ```
 
 ## src\redux\slugsSlice.ts
@@ -1249,6 +1446,8 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 type Slug = {
   id: number;
   slug: string;
+  title: string;
+  catId: number;
 };
 
 type SlugsState = {
@@ -1264,13 +1463,17 @@ const slugsSlice = createSlice({
   initialState,
   reducers: {
     addSlug(state, action: PayloadAction<Slug>) {
-      if (!state.slugs.some((slug) => slug.id === action.payload.id))
-          state.slugs.push(action.payload);
+      if (!state.slugs.some((slug) => slug.slug === action.payload.slug))
+        state.slugs.push(action.payload);
+    },
+    addSlugs(state, action: PayloadAction<Slug[]>) {
+      //if (!state.slugs.some((slug) => slug.slug === action.payload.slug))
+      state.slugs = action.payload;
     },
   },
 });
 
-export const { addSlug } = slugsSlice.actions;
+export const { addSlug, addSlugs } = slugsSlice.actions;
 export default slugsSlice.reducer;
 
 ```

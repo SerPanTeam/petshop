@@ -43,8 +43,8 @@ export const useSetCategories = () => {
 const fetchProductsByCategorieId = async (
   id: number | undefined
 ): Promise<ProductInCategory> => {
-  const url = `${API_BASE_URL}/categories/${id}`;
-  console.log(url);
+  //const url = `${API_BASE_URL}/categories/${id}`;
+ //console.log(url);
   const response = await fetch(`${API_BASE_URL}/categories/${id}`);
   if (!response.ok) throw new Error("Failed to fetch categories");
   return response.json();
@@ -59,7 +59,6 @@ export const useFetchProductsByCategorieId = (id: number | undefined) => {
   });
 };
 
-
 const fetchProducts = async (): Promise<Product[]> => {
   const response = await fetch(`${API_BASE_URL}/products/all`);
   if (!response.ok) throw new Error("Failed to fetch products");
@@ -71,5 +70,31 @@ export const useSetProducts = () => {
     queryKey: ["products"], // Уникальный ключ для запроса
     queryFn: fetchProducts, // Функция для загрузки данных
     staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+  });
+};
+
+const fetchProductById = async (
+  id: number | undefined
+): Promise<Product> => {
+  //console.log(url);
+  const response = await fetch(`${API_BASE_URL}/products/${id}`);
+  if (!response.ok) throw new Error("Failed to fetch product");
+  // return response.json();
+
+  const data: Product[] = await response.json();
+  
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error("Product not found");
+  }
+  
+  return data[0]; // Возвращаем первый элемент массива
+};
+
+export const useFetchProductById = (id: number | undefined) => {
+  return useQuery({
+    queryKey: ["productByID", id], // Уникальный ключ для запроса
+    queryFn: () => fetchProductById(id), // Функция для загрузки данных
+    staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+    enabled: typeof id === "number",
   });
 };

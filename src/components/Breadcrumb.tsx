@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 interface Breadcrumb {
-  name: string;
+  name: string | undefined;
   url: string;
 }
 
@@ -18,17 +18,21 @@ export default function Breadcrumb({
   return (
     <div className="flex flex-row mt-10 mb-10">
       {fullBreadcrumb.map((val, index) => {
+        const isLast = index === fullBreadcrumb.length - 1;
+        const isFirst = index === 0;
         return (
           <div
             key={index}
-            className="flex flex-row justify-center items-center flex-wrap"
+            className={`flex flex-row justify-center items-center flex-wrap ${
+              isFirst || isLast ? "hidden md:flex" : "flex"
+            }`}
           >
-            {index !== 0 && <div className="border h-[1px] lg:w-4 w-2"></div>}
+            {!isFirst && <div className="border h-[1px] lg:w-4 w-2 "></div>}
             <div className="border lg:py-2 lg:px-4 py-1 px-2 rounded-md hover:bg-gray-50">
               <Link
                 to={val.url}
                 className={`${
-                  index !== fullBreadcrumb.length-1
+                  index !== fullBreadcrumb.length - 1
                     ? "text-small-grey"
                     : "text-black"
                 } lg:text-[16px] text-[12px]`}

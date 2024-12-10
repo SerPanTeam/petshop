@@ -1,10 +1,13 @@
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
-//import { useLocation } from "react-router-dom";
+// import { useSelector } from "react-redux";
+// import { RootState } from "@/redux/store";
 import { useSetProducts } from "@/lib/api";
 import PreData from "@/components/PreData";
 import Breadcrumb from "@/components/Breadcrumb";
 import ProductsComponent from "@/components/ProductsComponent";
+// import { useEffect } from "react";
+// import { useDispatch } from "react-redux";
+// import { addSlug } from "@/redux/slugsSlice";
+// import { nameToSlug } from "@/lib/utils";
 
 type ProductsComponentProps = {
   isIncludeHead?: boolean;
@@ -19,19 +22,28 @@ function Products({
   isSalesProducts = false,
   isIncludeFilters = true,
 }: ProductsComponentProps) {
-  const slugs = useSelector((state: RootState) => state.slugs.slugs);
+  // const slugs = useSelector((state: RootState) => state.slugs.slugs);
   // const { pathname } = useLocation();
 
   // const catSlug = pathname.split("/").pop();
   // const catId = slugs.find((val) => val.slug === catSlug)?.id;
 
-  const { data, isLoading, error } = useSetProducts();
+  const { data, isLoading, error, isFetched } = useSetProducts();
+  // const dispatch = useDispatch();
 
-  if (!slugs.length) {
-    return <div>Loading slugs...</div>;
-  }
+  // useEffect(() => {
+  //   // console.log(data, error, isLoading);
+  //   if (!error && !isLoading && Array.isArray(data))
+  //     data?.map((val) => {
+  //       dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title), title: val.title, catId: val.categoryId}));
+  //     });
+  // }, [data, dispatch, isFetched, error, isLoading]);
 
-  if (isLoading) {
+  // if (!slugs.length) {
+  //   return <div>Loading slugs...</div>;
+  // }
+
+  if (isLoading||!isFetched) {
     return (
       <PreData limit={0} data={data} isLoading={isLoading} error={error} />
     );
@@ -60,7 +72,7 @@ function Products({
           <h1 className="heading-2 mb-10">All products</h1>
         </>
       )}
-      {isIncludeFilters && (<p>FILTERS</p>)}
+      {isIncludeFilters && <p>FILTERS</p>}
       <ProductsComponent products={viewData} />
     </>
   );
