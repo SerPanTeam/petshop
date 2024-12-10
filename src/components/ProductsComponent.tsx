@@ -20,10 +20,10 @@ function Products({ products }: { products: Product[] }) {
         return (
           <Link key={val.id} to={"/products/" + nameToSlug(val.title)}>
             <div className="flex flex-col justify-center border rounded-md items-center gap-5">
-              <div className="relative group w-full overflow-hidden">
+              <div className="relative group w-full lg:h-72 md:h-56 h-56 overflow-hidden">
               {/* <div className="relative group"> */}
                 <img
-                  className="w-full object-cover h-[284px]"
+                  className="w-full object-cover h-full"
                   src={API_BASE_URL + val.image}
                   alt={val.title}
                 />

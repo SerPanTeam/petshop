@@ -10,12 +10,14 @@ type ProductsComponentProps = {
   isIncludeHead?: boolean;
   limit?: number;
   isSalesProducts?: boolean;
+  isIncludeFilters?: boolean;
 };
 
 function Products({
   isIncludeHead = true,
   limit = 0,
   isSalesProducts = false,
+  isIncludeFilters = true,
 }: ProductsComponentProps) {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
   // const { pathname } = useLocation();
@@ -58,6 +60,7 @@ function Products({
           <h1 className="heading-2 mb-10">All products</h1>
         </>
       )}
+      {isIncludeFilters && (<p>FILTERS</p>)}
       <ProductsComponent products={viewData} />
     </>
   );

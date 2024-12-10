@@ -31,7 +31,7 @@ function Home() {
       />
       <Categoty limit={4}/>
       <SectionDevider titleName="Sale" buttonName="All sales" url="/sales" />
-      <Products limit={4} isIncludeHead={false} isSalesProducts={true}/>
+      <Products limit={4} isIncludeHead={false} isSalesProducts={true} isIncludeFilters={false}/>
     </>
   );
 }
