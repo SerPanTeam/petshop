@@ -31,16 +31,19 @@ function Header() {
 
       <nav className="hidden md:block">
         <ul className="flex gap-8">
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <Link
-                to={item.href}
-                className="text-txtBlack text-[20px] font-medium leading-[130%] hover:text-hoverBlue"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
+          {menuItems.map(
+            (item) =>
+              !item.isMobMenu && (
+                <li key={item.id}>
+                  <Link
+                    to={item.href}
+                    className="text-txtBlack text-[20px] font-medium leading-[130%] hover:text-hoverBlue"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              )
+          )}
         </ul>
       </nav>
 

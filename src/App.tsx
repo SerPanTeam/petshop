@@ -22,7 +22,7 @@ function App() {
   const dispatch = useDispatch();
   const { data, isLoading, error, isFetched } = useSetCategories();
   useEffect(() => {
-   // console.log(data, error, isLoading);
+    // console.log(data, error, isLoading);
     if (!error && !isLoading && Array.isArray(data))
       data?.map((val) => {
         dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title) }));
@@ -43,9 +43,9 @@ function App() {
             <Route path="/categories/:categoryName" element={<Categorie />} />
 
             <Route path="/sales" element={<Sales />} />
-            <Route path="/products" element={<Products />}>
-              <Route path=":id" element={<ProductDetail />} />
-            </Route>
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:productName" element={<ProductDetail />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         )}

@@ -8,7 +8,7 @@
     @apply xl:text-[40px] md:text-[30px] text-[20px];
   }
   .text-small-grey {
-    @apply text-txtGrey font-medium leading-[130%] text-[20px];
+    @apply text-txtGrey font-medium leading-[130%] md:text-[20px] text-[12px];
   }
 }
 

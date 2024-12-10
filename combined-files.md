@@ -17,6 +17,7 @@
 │   │   ├── ui
 │   │   │   ├── dropdown-menu.tsx
 │   │   │   └── skeleton.tsx
+│   │   ├── _ProductsComponent.tsx
 │   │   ├── Breadcrumb.tsx
 │   │   ├── CategotiesComponent.tsx
 │   │   ├── Footer.tsx
@@ -97,7 +98,7 @@ function App() {
   const dispatch = useDispatch();
   const { data, isLoading, error, isFetched } = useSetCategories();
   useEffect(() => {
-    console.log(data, error, isLoading);
+    // console.log(data, error, isLoading);
     if (!error && !isLoading && Array.isArray(data))
       data?.map((val) => {
         dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title) }));
@@ -118,9 +119,9 @@ function App() {
             <Route path="/categories/:categoryName" element={<Categorie />} />
 
             <Route path="/sales" element={<Sales />} />
-            <Route path="/products" element={<Products />}>
-              <Route path=":id" element={<ProductDetail />} />
-            </Route>
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:productName" element={<ProductDetail />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         )}
@@ -163,10 +164,14 @@ export default function Breadcrumb({
             className="flex flex-row justify-center items-center flex-wrap"
           >
             {index !== 0 && <div className="border h-[1px] lg:w-4 w-2"></div>}
-            <div className="border lg:py-2 lg:px-4 py-1 px-2 rounded-md">
+            <div className="border lg:py-2 lg:px-4 py-1 px-2 rounded-md hover:bg-gray-50">
               <Link
                 to={val.url}
-                className="text-small-grey lg:text-[16px] text-[12px]"
+                className={`${
+                  index !== fullBreadcrumb.length-1
+                    ? "text-small-grey"
+                    : "text-black"
+                } lg:text-[16px] text-[12px]`}
               >
                 {val.name}
               </Link>
@@ -187,17 +192,13 @@ import { API_BASE_URL } from "@/config";
 import { Link } from "react-router-dom";
 import { nameToSlug } from "@/lib/utils";
 import { useSetCategories } from "@/lib/api";
-import PreData from "./PreData";
 
 type CategoryProps = {
   limit?: number;
 };
 
 export default function Category({ limit }: CategoryProps) {
-  //const dispatch = useDispatch();
-  const { data, isLoading, error } = useSetCategories();
-
-  <PreData limit={0} data={data} isLoading={isLoading} error={error} />;
+  const { data } = useSetCategories();
 
   return (
     <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -311,16 +312,19 @@ function Header() {
 
       <nav className="hidden md:block">
         <ul className="flex gap-8">
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <Link
-                to={item.href}
-                className="text-txtBlack text-[20px] font-medium leading-[130%] hover:text-hoverBlue"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
+          {menuItems.map(
+            (item) =>
+              !item.isMobMenu && (
+                <li key={item.id}>
+                  <Link
+                    to={item.href}
+                    className="text-txtBlack text-[20px] font-medium leading-[130%] hover:text-hoverBlue"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              )
+          )}
         </ul>
       </nav>
 
@@ -375,8 +379,8 @@ function PreData({
 }) {
   if (isLoading) {
     return (
-      <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {Array.from({ length: limit || 4 }).map((_, index) => (
+      <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-5">
+        {Array.from({ length: limit || 8 }).map((_, index) => (
           <div key={index} className="flex flex-col justify-center">
             <Skeleton className="h-40 w-full" />
             <Skeleton className="h-6 w-3/4 mt-4" />
@@ -399,22 +403,68 @@ export default PreData;
 
 ```typescript
 import { Product } from "@/lib/api";
+import { Link } from "react-router-dom";
+import { nameToSlug } from "@/lib/utils";
+import { API_BASE_URL } from "@/config";
 
-type ProductsComponentProps = {
-  products?: Product[];
-};
+function Products({ products }: { products: Product[] }) {
+  function getProcent(fullPrice: number, curPrice: number) {
+    return Math.round(100 - (curPrice * 100) / fullPrice);
+  }
 
-function ProductsComponent({ products }: ProductsComponentProps) {
+  function onButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation(); // Останавливаем всплытие события
+    e.preventDefault(); // Предотвращаем переход по ссылке
+    console.log("Добавлено в корзину!");
+  }
+
   return (
-    <div>
-      {products?.map((val) => {
-        return val.title;
+    <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      {products.map((val) => {
+        return (
+          <Link key={val.id} to={"/products/" + nameToSlug(val.title)}>
+            <div className="flex flex-col justify-center border rounded-md items-center gap-5">
+              <div className="relative group">
+                <img
+                  className="w-full h-full object-cover"
+                  src={API_BASE_URL + val.image}
+                  alt={val.title}
+                />
+                {val.discont_price && (
+                  <span className="absolute top-4 right-4 bg-blue-600 text-white text-[20px] font-bold px-2 py-1 rounded-lg leading-[130%] tracking-[0.6px]">
+                    -{getProcent(val.price, val.discont_price)}%
+                  </span>
+                )}
+
+                <button
+                  className="w-[90%] absolute bottom-4 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
+                  onClick={onButtonClick}
+                >
+                  Add to Cart
+                </button>
+              </div>
+              <div className="w-full px-4 pb-4">
+                <h3 className="text-center text-[20px] font-medium leading-[130%] text-[#282828] mt-4 truncate">
+                  {val.title}
+                </h3>
+                <div className="flex flex-row justify-start items-end gap-4">
+                  <p className="heading-3">
+                    ${val.discont_price ? val.discont_price : val.price}
+                  </p>
+                  <p className="text-small-grey line-through">
+                    {val.discont_price ? `$${val.price}` : ""}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Link>
+        );
       })}
     </div>
   );
 }
 
-export default ProductsComponent;
+export default Products;
 
 ```
 
@@ -696,6 +746,29 @@ export { Skeleton }
 
 ```
 
+## src\components\_ProductsComponent.tsx
+
+```typescript
+import { Product } from "@/lib/api";
+
+type ProductsComponentProps = {
+  products?: Product[];
+};
+
+function ProductsComponent({ products }: ProductsComponentProps) {
+  return (
+    <div>
+      {products?.map((val) => {
+        return val.title;
+      })}
+    </div>
+  );
+}
+
+export default ProductsComponent;
+
+```
+
 ## src\config.ts
 
 ```typescript
@@ -715,7 +788,7 @@ export const API_BASE_URL = "https://pet-shop-backend.fly.dev";
     @apply xl:text-[40px] md:text-[30px] text-[20px];
   }
   .text-small-grey {
-    @apply text-txtGrey font-medium leading-[130%] text-[20px];
+    @apply text-txtGrey font-medium leading-[130%] md:text-[20px] text-[12px];
   }
 }
 
@@ -836,7 +909,9 @@ export const useSetCategories = () => {
 
 const fetchProductsByCategorieId = async (
   id: number | undefined
-): Promise<ProductInCategory[]> => {
+): Promise<ProductInCategory> => {
+  const url = `${API_BASE_URL}/categories/${id}`;
+  console.log(url);
   const response = await fetch(`${API_BASE_URL}/categories/${id}`);
   if (!response.ok) throw new Error("Failed to fetch categories");
   return response.json();
@@ -844,12 +919,27 @@ const fetchProductsByCategorieId = async (
 
 export const useFetchProductsByCategorieId = (id: number | undefined) => {
   return useQuery({
-    queryKey: ["categories"], // Уникальный ключ для запроса
+    queryKey: ["categorieByID", id], // Уникальный ключ для запроса
     queryFn: () => fetchProductsByCategorieId(id), // Функция для загрузки данных
     staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+    enabled: typeof id === "number",
   });
 };
 
+
+const fetchProducts = async (): Promise<Product[]> => {
+  const response = await fetch(`${API_BASE_URL}/products/all`);
+  if (!response.ok) throw new Error("Failed to fetch products");
+  return response.json();
+};
+
+export const useSetProducts = () => {
+  return useQuery({
+    queryKey: ["products"], // Уникальный ключ для запроса
+    queryFn: fetchProducts, // Функция для загрузки данных
+    staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+  });
+};
 ```
 
 ## src\lib\utils.ts
@@ -873,7 +963,6 @@ export function nameToSlug(name: string) {
 ## src\main.tsx
 
 ```typescript
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
@@ -886,7 +975,6 @@ import { store } from "@/redux/store";
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
@@ -895,7 +983,6 @@ createRoot(document.getElementById("root")!).render(
         </BrowserRouter>
       </QueryClientProvider>
     </Provider>
-  </StrictMode>
 );
 
 ```
@@ -921,15 +1008,23 @@ import { RootState } from "@/redux/store";
 import { useLocation } from "react-router-dom";
 import { useFetchProductsByCategorieId } from "@/lib/api";
 import PreData from "@/components/PreData";
+import Breadcrumb from "@/components/Breadcrumb";
+import Products from "@/components/ProductsComponent";
 
 function Categorie() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
   const { pathname } = useLocation();
-  const catId = slugs.find((val) => val.slug == pathname.split("/").pop())?.id;
-  console.log(slugs);
+
+  const catSlug = pathname.split("/").pop();
+  const catId = slugs.find((val) => val.slug === catSlug)?.id;
+
   const { data, isLoading, error } = useFetchProductsByCategorieId(catId);
 
-  if (!slugs.length || isLoading) {
+  if (!slugs.length) {
+    return <div>Loading slugs...</div>;
+  }
+
+  if (isLoading) {
     return (
       <PreData limit={0} data={data} isLoading={isLoading} error={error} />
     );
@@ -939,11 +1034,17 @@ function Categorie() {
     return <div>Error: {error.message}</div>;
   }
 
+  if (!data) {
+    return <div>No products in this category</div>;
+  }
+
   return (
     <>
-    <div>Categorie</div>
-      {console.log(data)}
-      {catId}
+      <Breadcrumb
+        additionalBreadcrumb={[{ name: data.category.title, url: pathname }]}
+      />
+      <h1 className="heading-2 mb-10">{data.category.title}</h1>
+      <Products products={data.data}/>
     </>
   );
 }
@@ -982,6 +1083,8 @@ export default Categories;
 import { useNavigate } from "react-router-dom";
 import SectionDevider from "../components/SectionDevider";
 import Categoty from "../components/CategotiesComponent";
+import Products from "./Products";
+
 function Home() {
   const navigate = useNavigate();
 
@@ -1010,6 +1113,7 @@ function Home() {
       />
       <Categoty limit={4}/>
       <SectionDevider titleName="Sale" buttonName="All sales" url="/sales" />
+      <Products limit={4} isIncludeHead={false} isSalesProducts={true}/>
     </>
   );
 }
@@ -1055,14 +1159,74 @@ export default ProductDetail
 ## src\pages\Products.tsx
 
 ```typescript
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+//import { useLocation } from "react-router-dom";
+import { useSetProducts } from "@/lib/api";
+import PreData from "@/components/PreData";
+import Breadcrumb from "@/components/Breadcrumb";
+import ProductsComponent from "@/components/ProductsComponent";
+import { Product } from "@/lib/api";
 
-function Products() {
+type ProductsComponentProps = {
+  isIncludeHead?: boolean;
+  limit?: number;
+  isSalesProducts?: boolean;
+};
+
+function Products({
+  isIncludeHead = true,
+  limit = 0,
+  isSalesProducts = false,
+}: ProductsComponentProps) {
+  const slugs = useSelector((state: RootState) => state.slugs.slugs);
+  // const { pathname } = useLocation();
+
+  // const catSlug = pathname.split("/").pop();
+  // const catId = slugs.find((val) => val.slug === catSlug)?.id;
+
+  const { data, isLoading, error } = useSetProducts();
+
+  if (!slugs.length) {
+    return <div>Loading slugs...</div>;
+  }
+
+  if (isLoading) {
+    return (
+      <PreData limit={0} data={data} isLoading={isLoading} error={error} />
+    );
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  if (!data) {
+    return <div>No products in this category</div>;
+  }
+
+  let viewData = data;
+  if (isSalesProducts)
+    viewData = viewData.filter((val) => val.discont_price > 0);
+  if (limit > 0) viewData = viewData.slice(0, limit);
+
   return (
-    <div>Products</div>
-  )
+    <>
+      {isIncludeHead && (
+        <>
+          <Breadcrumb
+            additionalBreadcrumb={[{ name: "All products", url: "/products" }]}
+          />
+          <h1 className="heading-2 mb-10">All products</h1>
+        </>
+      )}
+      <ProductsComponent products={viewData} />
+    </>
+  );
 }
 
-export default Products
+export default Products;
+
 ```
 
 ## src\pages\Sales.tsx
@@ -1100,7 +1264,7 @@ const slugsSlice = createSlice({
   initialState,
   reducers: {
     addSlug(state, action: PayloadAction<Slug>) {
-      if(!state.slugs.includes(action.payload))
+      if (!state.slugs.some((slug) => slug.id === action.payload.id))
           state.slugs.push(action.payload);
     },
   },

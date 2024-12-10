@@ -58,3 +58,18 @@ export const useFetchProductsByCategorieId = (id: number | undefined) => {
     enabled: typeof id === "number",
   });
 };
+
+
+const fetchProducts = async (): Promise<Product[]> => {
+  const response = await fetch(`${API_BASE_URL}/products/all`);
+  if (!response.ok) throw new Error("Failed to fetch products");
+  return response.json();
+};
+
+export const useSetProducts = () => {
+  return useQuery({
+    queryKey: ["products"], // Уникальный ключ для запроса
+    queryFn: fetchProducts, // Функция для загрузки данных
+    staleTime: 1000 * 60 * 5, // Данные актуальны 5 минут
+  });
+};
