@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Category, ProductInCategory } from "@/lib/api";
+import NotFound from "@/pages/NotFound";
 
 function PreData({
   isLoading,
@@ -27,7 +28,7 @@ function PreData({
 
   if (error instanceof Error) return <p>Error: {error.message}</p>;
   //   if (!data || data.length === 0) return <p>No data available.</p>;
-  if (!data) return <p>No data available.</p>;
+  if (!data) return <NotFound />;
 }
 
 export default PreData;

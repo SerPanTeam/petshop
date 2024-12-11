@@ -1,5 +1,11 @@
 import { Link } from "react-router-dom";
 import { Menu as MenuIco } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import Logo from "../assets/icons/logo.svg?react";
+import Cart from "../assets/icons/cart.svg?react";
 
 import {
   DropdownMenu,
@@ -7,10 +13,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-
-import Logo from "../assets/icons/logo.svg?react";
-import Cart from "../assets/icons/cart.svg?react";
-import { useState } from "react";
 
 const menuItems = [
   { id: 1, label: "Main Page", href: "/" },
@@ -22,9 +24,25 @@ const menuItems = [
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const countInCart = useSelector((state: RootState) =>
+    state.cart.cartPositions.reduce((acc, val) => acc + val.count, 0)
+  );
+
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const name = menuItems.find((val) => val.href == pathname)?.label;
+    if (name) {
+      document.title = name + " - PetSHOP";
+    } else {
+      document.title =
+        pathname
+          .split("/")[pathname.split("/").length - 1].toUpperCase()
+          .replace(/-/g, " ") + " - PetSHOP";
+    }
+  }, [pathname]);
 
   return (
-    <header className="flex flex-row justify-between items-center px-2 lg:px-10 py-6 border-b border-gray-300">
+    <div className="flex flex-row justify-between items-center px-2 py-6 ">
       <Link to={"/"}>
         <Logo className="transform transition-transform duration-300 hover:scale-125 hover:rotate-45 hover:brightness-125" />
       </Link>
@@ -47,8 +65,13 @@ function Header() {
         </ul>
       </nav>
 
-      <Link to={"/cart"}>
+      <Link to={"/cart"} className="relative">
         <Cart className="transform transition-transform duration-300 hover:scale-125 hover:rotate-12 hover:brightness-125" />
+        {countInCart > 0 && (
+          <div className="rounded-full bg-blue-600 absolute top-0 left-0 text-white p-1 w-7 h-7 flex justify-center items-center">
+            {countInCart > 99 ? 99 : countInCart}
+          </div>
+        )}
       </Link>
 
       <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -71,7 +94,7 @@ function Header() {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-    </header>
+    </div>
   );
 }
 

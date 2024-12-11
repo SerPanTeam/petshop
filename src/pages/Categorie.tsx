@@ -30,7 +30,9 @@ function Categorie() {
   }
 
   if (!data) {
-    return <div>No products in this category</div>;
+    return (
+      <PreData limit={0} data={data} isLoading={isLoading} error={error} />
+    );
   }
 
   return (
@@ -39,7 +41,7 @@ function Categorie() {
         additionalBreadcrumb={[{ name: data.category.title, url: pathname }]}
       />
       <h1 className="heading-2 mb-10">{data.category.title}</h1>
-      <Products products={data.data}/>
+      <Products products={data.data} />
     </>
   );
 }

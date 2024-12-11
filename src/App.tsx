@@ -19,29 +19,17 @@ import { useEffect, useState } from "react";
 
 function App() {
   const dispatch = useDispatch();
-  // const { data, isLoading, error, isFetched } = useSetCategories();
-  // useEffect(() => {
-  //   // console.log(data, error, isLoading);
-  //   if (!error && !isLoading && Array.isArray(data))
-  //     data?.map((val) => {
-  //       dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title), title: val.title, catId: 0 }));
-  //     });
-  // }, [data, dispatch, isFetched, error, isLoading]);
 
-  // Загрузка категорий
   const {
     data: categoriesData,
     isLoading: isLoadingCategories,
     error: errorCategories,
-    // isFetched: isFetchedCategories,
   } = useSetCategories();
 
-  // Загрузка продуктов
   const {
     data: productsData,
     isLoading: isLoadingProducts,
     error: errorProducts,
-    // isFetched: isFetchedProducts,
   } = useSetProducts();
 
   const [slugsDispatched, setSlugsDispatched] = useState(false);
@@ -55,7 +43,6 @@ function App() {
       !isLoadingProducts &&
       Array.isArray(productsData)
     ) {
-      // Генерация slugs для категорий
       const categorySlugs = categoriesData.map((category) => ({
         id: category.id,
         slug: nameToSlug(category.title),
@@ -64,7 +51,6 @@ function App() {
         type: "category" as const,
       }));
 
-      // Генерация slugs для продуктов
       const productSlugs = productsData.map((product) => ({
         id: product.id,
         slug: nameToSlug(product.title),
@@ -73,7 +59,6 @@ function App() {
         type: "product" as const,
       }));
 
-      // Диспатч slugs в Redux
       dispatch(addSlugs([...categorySlugs, ...productSlugs]));
       setSlugsDispatched(true);
     }
@@ -87,15 +72,16 @@ function App() {
     dispatch,
   ]);
 
-  // Проверка загрузки slugs
   const isLoading =
     isLoadingCategories || isLoadingProducts || !slugsDispatched;
   const error = errorCategories || errorProducts;
 
   return (
     <div className="container min-h-screen flex flex-col justify-between">
-      <Header />
-      <main>
+      <header className="lg:px-10 border-b border-gray-300">
+        <Header />
+      </header>
+      <main className="lg:px-10">
         {isLoading ? (
           <PreData limit={0} isLoading={isLoading} error={error} />
         ) : (
@@ -104,20 +90,19 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/:categoryName" element={<Categorie />} />
-
             <Route path="/sales" element={<Sales />} />
             <Route path="/products" element={<Products />} />
-            {/* <Route path="/products/:productName" element={<ProductDetail />} /> */}
             <Route
               path="/categories/:categoryName/:productName"
               element={<ProductDetail />}
             />
-
             <Route path="*" element={<NotFound />} />
           </Routes>
         )}
       </main>
-      <Footer />
+      <footer className="lg:px-10">
+        <Footer />
+      </footer>
     </div>
   );
 }

@@ -9,6 +9,8 @@ import { getProcent } from "@/lib/utils";
 import Minus from "@/assets/icons/minus.svg?react";
 import Plus from "@/assets/icons/plus.svg?react";
 import ReadMore from "@/components/ReadMore";
+import { useState } from "react";
+import AddToCartButton from "@/components/AddToCartButton";
 
 function ProductDetail() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
@@ -23,9 +25,21 @@ function ProductDetail() {
 
   const { data, isLoading, error } = useFetchProductById(prodId);
 
-  // if (!slugs.length) {
-  //   return <div>Loading slugs...</div>;
-  // }
+  // const dispatch = useDispatch();
+
+  const [count, setCount] = useState(1);
+
+  function onChangeCount(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = parseInt(e.target.value);
+    if (value) setCount(value);
+  }
+
+  function onPlusCount() {
+    setCount((value) => value + 1);
+  }
+  function onMinusCount() {
+    if (count > 1) setCount((value) => value - 1);
+  }
 
   if (isLoading || !data) {
     return (
@@ -33,7 +47,6 @@ function ProductDetail() {
     );
   }
 
-  //console.log(data);
   return (
     <div>
       <Breadcrumb
@@ -70,29 +83,38 @@ function ProductDetail() {
           <div className="flex flex-row">
             <div className="flex md:flex-row flex-col w-full gap-8 justify-center items-center">
               <div className="flex flex-row">
-                <button className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -mr-1 z-10">
+                <button
+                  className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -mr-1 z-10"
+                  onClick={onMinusCount}
+                >
                   <Minus />
                 </button>
                 <input
                   className="appearance-none w-24 text-center border-t border-b border-l-0 border-r-0 border-gray-300 z-0 text-[20px] font-semibold leading-[1.3]"
-                  type="number"
+                  value={count}
+                  onChange={(e) => onChangeCount(e)}
                 />
-                <button className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -ml-1 z-10">
+                <button
+                  className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -ml-1 z-10"
+                  onClick={onPlusCount}
+                >
                   <Plus />
                 </button>
               </div>
-              <button className="h-14 w-full bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]">
-                Add to Cart
-              </button>
+              <AddToCartButton
+                data={data}
+                count={count}
+                callbackFunc={() => setCount(1)}
+                width="w-full"
+              />
             </div>
           </div>
           <div className="flex flex-col gap-4">
             <h3 className="text-[20px] font-semibold leading-[130%]">
               Description
             </h3>
-            <p>
-              <ReadMore text={data.description} maxLength={500} />
-            </p>
+
+            <ReadMore text={data.description} maxLength={400} />
           </div>
         </div>
       </div>

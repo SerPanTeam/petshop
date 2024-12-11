@@ -3,6 +3,7 @@
 ```plaintext
 ├── public
 │   ├── images
+│   │   ├── 404.png
 │   │   ├── main-banner.png
 │   │   └── map.png
 │   └── .htaccess
@@ -12,18 +13,20 @@
 │   │       ├── cart.svg
 │   │       ├── instagram.svg
 │   │       ├── logo.svg
+│   │       ├── minus.svg
+│   │       ├── plus.svg
 │   │       └── whatsapp.svg
 │   ├── components
 │   │   ├── ui
 │   │   │   ├── dropdown-menu.tsx
 │   │   │   └── skeleton.tsx
-│   │   ├── _ProductsComponent.tsx
 │   │   ├── Breadcrumb.tsx
 │   │   ├── CategotiesComponent.tsx
 │   │   ├── Footer.tsx
 │   │   ├── Header.tsx
 │   │   ├── PreData.tsx
 │   │   ├── ProductsComponent.tsx
+│   │   ├── ReadMore.tsx
 │   │   ├── ScrollToTop.tsx
 │   │   └── SectionDevider.tsx
 │   ├── lib
@@ -39,6 +42,7 @@
 │   │   ├── Products.tsx
 │   │   └── Sales.tsx
 │   ├── redux
+│   │   ├── cartSlice.ts
 │   │   ├── slugsSlice.ts
 │   │   ├── store.ts
 │   │   └── userSlice.ts
@@ -207,7 +211,7 @@ export default App;
 ```typescript
 import { Link } from "react-router-dom";
 interface Breadcrumb {
-  name: string;
+  name: string | undefined;
   url: string;
 }
 
@@ -225,17 +229,21 @@ export default function Breadcrumb({
   return (
     <div className="flex flex-row mt-10 mb-10">
       {fullBreadcrumb.map((val, index) => {
+        const isLast = index === fullBreadcrumb.length - 1;
+        const isFirst = index === 0;
         return (
           <div
             key={index}
-            className="flex flex-row justify-center items-center flex-wrap"
+            className={`flex flex-row justify-center items-center flex-wrap ${
+              isFirst || isLast ? "hidden md:flex" : "flex"
+            }`}
           >
-            {index !== 0 && <div className="border h-[1px] lg:w-4 w-2"></div>}
+            {!isFirst && <div className="border h-[1px] lg:w-4 w-2 "></div>}
             <div className="border lg:py-2 lg:px-4 py-1 px-2 rounded-md hover:bg-gray-50">
               <Link
                 to={val.url}
                 className={`${
-                  index !== fullBreadcrumb.length-1
+                  index !== fullBreadcrumb.length - 1
                     ? "text-small-grey"
                     : "text-black"
                 } lg:text-[16px] text-[12px]`}
@@ -348,6 +356,8 @@ export default Footer;
 ```typescript
 import { Link } from "react-router-dom";
 import { Menu as MenuIco } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 import {
   DropdownMenu,
@@ -370,6 +380,9 @@ const menuItems = [
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const countInCart = useSelector((state: RootState) =>
+    state.cart.cartPositions.reduce((acc, val) => acc + val.count, 0)
+  );
 
   return (
     <header className="flex flex-row justify-between items-center px-2 lg:px-10 py-6 border-b border-gray-300">
@@ -395,8 +408,13 @@ function Header() {
         </ul>
       </nav>
 
-      <Link to={"/cart"}>
+      <Link to={"/cart"} className="relative">
         <Cart className="transform transition-transform duration-300 hover:scale-125 hover:rotate-12 hover:brightness-125" />
+        {countInCart > 0 && (
+          <div className="rounded-full bg-blue-600 absolute top-0 left-0 text-white p-1 w-7 h-7 flex justify-center items-center">
+            {countInCart > 99 ? 99 : countInCart}
+          </div>
+        )}
       </Link>
 
       <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -476,6 +494,8 @@ import { API_BASE_URL } from "@/config";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 
+import { getProcent } from "@/lib/utils";
+
 function Products({ products }: { products: Product[] }) {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
 
@@ -483,9 +503,6 @@ function Products({ products }: { products: Product[] }) {
     return <div>Loading slugs...</div>;
   }
 
-  function getProcent(fullPrice: number, curPrice: number) {
-    return Math.round(100 - (curPrice * 100) / fullPrice);
-  }
 
   function onButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation(); // Останавливаем всплытие события
@@ -494,7 +511,7 @@ function Products({ products }: { products: Product[] }) {
   }
 
   function getCatSlugByProdID(prodId: number) {
-    console.log(slugs);
+    //console.log(slugs);
     const catID = slugs.filter((val) => val.id == prodId && val.catId > 0)[0].catId;
     return slugs.filter(val=>val.id == catID && val.catId==0)[0].slug;
   }
@@ -550,6 +567,44 @@ function Products({ products }: { products: Product[] }) {
 }
 
 export default Products;
+
+```
+
+## src\components\ReadMore.tsx
+
+```typescript
+import { useState } from "react";
+
+const ReadMore = ({
+  text,
+  maxLength = 100,
+}: {
+  text: string;
+  maxLength: number;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleReadMore = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  return (
+    <div className="">
+      <p>
+        {isExpanded ? text : `${text.slice(0, maxLength)}...`}
+        <br />
+        <button
+          onClick={toggleReadMore}
+          className=" mt-4 text-[16px] font-medium leading-[1.3] underline custom-underline"
+        >
+          {isExpanded ? "Read Less" : "Read More"}
+        </button>
+      </p>
+    </div>
+  );
+};
+
+export default ReadMore;
 
 ```
 
@@ -831,29 +886,6 @@ export { Skeleton }
 
 ```
 
-## src\components\_ProductsComponent.tsx
-
-```typescript
-import { Product } from "@/lib/api";
-
-type ProductsComponentProps = {
-  products?: Product[];
-};
-
-function ProductsComponent({ products }: ProductsComponentProps) {
-  return (
-    <div>
-      {products?.map((val) => {
-        return val.title;
-      })}
-    </div>
-  );
-}
-
-export default ProductsComponent;
-
-```
-
 ## src\config.ts
 
 ```typescript
@@ -866,7 +898,7 @@ export const API_BASE_URL = "https://pet-shop-backend.fly.dev";
 @layer components {
   .heading-2 {
     @apply text-txtBlack font-bold leading-[110%];
-    @apply xl:text-[64px] md:text-[40px] text-[30px];
+    @apply 2xl:text-[64px] xl:text-[40px] lg:text-[30px] text-[25px];
   }
   .heading-3 {
     @apply text-txtBlack font-semibold leading-[110%];
@@ -1064,11 +1096,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function nameToSlug(name: string) {
-
-  return name.toLocaleLowerCase().trim().replace("&", "and").replace(/\s+/g, "-");
+export function nameToSlug(name: string): string {
+  return name
+    .toLowerCase() // Преобразуем в нижний регистр
+    .trim() // Убираем начальные и конечные пробелы
+    .replace(/&/g, 'and') // Заменяем & на 'and'
+    .normalize('NFD') // Разлагаем символы с диакритическими знаками
+    .replace(/[\u0300-\u036f]/g, '') // Удаляем диакритические знаки
+    .replace(/[^a-z0-9\s-]/g, '') // Удаляем все специальные символы кроме букв, цифр, пробелов и дефисов
+    .replace(/\s+/g, '-') // Заменяем пробелы на дефисы
+    .replace(/-+/g, '-'); // Удаляем множественные дефисы
 }
 
+export function getProcent(fullPrice: number, curPrice: number) {
+  return Math.round(100 - (curPrice * 100) / fullPrice);
+}
 ```
 
 ## src\main.tsx
@@ -1236,16 +1278,35 @@ export default Home;
 ## src\pages\NotFound.tsx
 
 ```typescript
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function NotFound() {
+  const navigate = useNavigate();
+
+  const goHome = () => {
+    navigate("/");
+  };
+
   return (
-    <div className="text-center">
-      <h1 className="text-4xl font-bold text-txtBlack">404</h1>
-      <p className="text-lg text-gray-500">Page Not Found</p>
-      <Link to="/" className="text-hoverBlue hover:underline">
-        Go back to Home
-      </Link>
+    <div className="text-center flex flex-col justify-center items-center">
+      <div className="text-center flex flex-col justify-center items-center mt-20 max-w-[664px]">
+        <img
+          src="/images/404.png"
+          alt="Page Not Found"
+          className="max-w-[600px]"
+        />
+        <h1 className="text-4xl font-bold text-txtBlack">Page Not Found</h1>
+        <p className="text-lg text-gray-500">
+          We’re sorry, the page you requested could not be found. Please go back
+          to the homepage.
+        </p>
+        <button
+          onClick={goHome}
+          className="bg-blue-600 rounded-md text-whitetext-center text-[20px] font-semibold leading-[1.3] text-white w-52 py-4 mt-8"
+        >
+          Go Home
+        </button>
+      </div>
     </div>
   );
 }
@@ -1261,9 +1322,16 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useLocation } from "react-router-dom";
 import PreData from "@/components/PreData";
-import { useFetchProductById } from "@/lib/api";
+import { Product, useFetchProductById } from "@/lib/api";
 import Breadcrumb from "@/components/Breadcrumb";
 import { API_BASE_URL } from "@/config";
+import { getProcent } from "@/lib/utils";
+import Minus from "@/assets/icons/minus.svg?react";
+import Plus from "@/assets/icons/plus.svg?react";
+import ReadMore from "@/components/ReadMore";
+import { useDispatch } from "react-redux";
+import { addProduct } from "@/redux/cartSlice";
+import { useState } from "react";
 
 function ProductDetail() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
@@ -1275,21 +1343,42 @@ function ProductDetail() {
 
   const catId = slugs.find((val) => val.id == prodId && val.catId > 0)?.catId;
   const category = slugs.find((val) => val.id == catId && val.catId == 0);
-  console.log(category);
 
   const { data, isLoading, error } = useFetchProductById(prodId);
+
+  const dispatch = useDispatch();
+
+  const [count, setCount] = useState(1);
+
+  function onChangeCount(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = parseInt(e.target.value);
+    if (value) setCount(value);
+  }
+
+  function onPlusCount() {
+    setCount((value) => value + 1);
+  }
+  function onMinusCount() {
+    if (count > 1) setCount((value) => value - 1);
+  }
+
+  // dispatch(addProduct({ product: data, count: count }))
+  function addToCart(data: Product) {
+    dispatch(addProduct({ product: data, count: count }));
+    setCount(1);
+  }
 
   // if (!slugs.length) {
   //   return <div>Loading slugs...</div>;
   // }
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <PreData limit={0} data={data} isLoading={isLoading} error={error} />
     );
   }
 
-  console.log(data);
+  //console.log(data);
   return (
     <div>
       <Breadcrumb
@@ -1304,16 +1393,64 @@ function ProductDetail() {
       <div className="flex lg:flex-row flex-col gap-16">
         <div className="lg:w-1/2">
           <img
-            src={API_BASE_URL + data?.image}
-            alt={data?.title}
+            src={API_BASE_URL + data.image}
+            alt={data.title}
             className="w-full h-auto object-cover rounded-md"
           />
         </div>
 
-        <div className="flex flex-col lg:w-1/2">
-          <h1 className="heading-2">{data?.title}</h1>
-          <h3>Description</h3>
-          <p>{data?.description}</p>
+        <div className="flex flex-col lg:w-1/2 gap-8">
+          <h1 className="heading-2">{data.title}</h1>
+          <div className="flex flex-row gap-8 items-end">
+            <p className="2xl:text-[64px] text-[40px] font-bold leading-[1.1]">
+              ${data.discont_price}
+            </p>
+            <p className="text-gray-500 2xl:text-[40px] text-[30px] font-medium leading-[1.3] line-through">
+              ${data.price}
+            </p>
+            <div className="bg-blue-600 px-2 py-1 rounded-md self-start text-white text-[20px] font-semibold leading-[1.3] tracking-[0.6px]">
+              -{getProcent(data.price, data.discont_price)}%
+            </div>
+          </div>
+          <div className="flex flex-row">
+            <div className="flex md:flex-row flex-col w-full gap-8 justify-center items-center">
+              <div className="flex flex-row">
+                <button
+                  className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -mr-1 z-10"
+                  onClick={onMinusCount}
+                >
+                  <Minus />
+                </button>
+                <input
+                  className="appearance-none w-24 text-center border-t border-b border-l-0 border-r-0 border-gray-300 z-0 text-[20px] font-semibold leading-[1.3]"
+                  value={count}
+                  onChange={(e) => onChangeCount(e)}
+                />
+                <button
+                  className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -ml-1 z-10"
+                  onClick={onPlusCount}
+                >
+                  <Plus />
+                </button>
+              </div>
+              <button
+                className="h-14 w-full bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
+                onClick={() =>
+                  // dispatch(addProduct({ product: data, count: count }))
+                  addToCart(data)
+                }
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h3 className="text-[20px] font-semibold leading-[130%]">
+              Description
+            </h3>
+
+            <ReadMore text={data.description} maxLength={400} />
+          </div>
         </div>
       </div>
     </div>
@@ -1438,6 +1575,47 @@ export default Sales;
 
 ```
 
+## src\redux\cartSlice.ts
+
+```typescript
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Product } from "@/lib/api";
+
+type ProductPosition = {
+  product: Product;
+  count: number;
+};
+
+type CartState = {
+  cartPositions: ProductPosition[];
+};
+
+const initialState: CartState = {
+  cartPositions: [],
+};
+
+const CartSlice = createSlice({
+  name: "cart",
+  initialState,
+  reducers: {
+    addProduct(state, action: PayloadAction<ProductPosition>) {
+      const curElement = state.cartPositions.find(
+        (val) => val.product.id === action.payload.product.id
+      );
+      if (curElement) {
+        curElement.count += action.payload.count;
+      } else {
+        state.cartPositions.push(action.payload);
+      }
+    },
+  },
+});
+
+export const { addProduct } = CartSlice.actions;
+export default CartSlice.reducer;
+
+```
+
 ## src\redux\slugsSlice.ts
 
 ```typescript
@@ -1484,11 +1662,14 @@ export default slugsSlice.reducer;
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "@/redux/userSlice";
 import slugsReduser from "@/redux/slugsSlice";
+import cartReduser from "@/redux/cartSlice";
+
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     slugs: slugsReduser,
+    cart: cartReduser,
   },
 });
 

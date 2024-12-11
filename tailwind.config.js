@@ -5,6 +5,9 @@ export default {
   theme: {
     extend: {
       colors: {
+        blue: {
+          600: '#0D50FF', // Замените на нужный вам цвет
+        },
         txtBlack: "var(--txt-black, #282828)",
         hoverBlue: "#0D50FF",
         background: "hsl(var(--background))",
