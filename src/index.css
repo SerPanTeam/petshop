@@ -1,7 +1,7 @@
 @layer components {
   .heading-2 {
     @apply text-txtBlack font-bold leading-[110%];
-    @apply xl:text-[64px] md:text-[40px] text-[30px];
+    @apply 2xl:text-[64px] xl:text-[40px] lg:text-[30px] text-[25px];
   }
   .heading-3 {
     @apply text-txtBlack font-semibold leading-[110%];
