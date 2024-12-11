@@ -1,5 +1,5 @@
-import CategotiesComponent from "@/components/CategotiesComponent";
-import Breadcrumb from "@/components/Breadcrumb";
+import CategotiesComponent from "@/components/product/CategoriesComponent";
+import Breadcrumb from "@/components/common/Breadcrumb";
 
 
 function Categories() {

@@ -1,16 +1,16 @@
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useLocation } from "react-router-dom";
-import PreData from "@/components/PreData";
+import PreData from "@/components/common/PreData";
 import { useFetchProductById } from "@/lib/api";
-import Breadcrumb from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/common/Breadcrumb";
 import { API_BASE_URL } from "@/config";
-import { getProcent } from "@/lib/utils";
+import { getPercent } from "@/lib/utils";
 import Minus from "@/assets/icons/minus.svg?react";
 import Plus from "@/assets/icons/plus.svg?react";
-import ReadMore from "@/components/ReadMore";
+import ReadMore from "@/components/common/ReadMore";
 import { useState } from "react";
-import AddToCartButton from "@/components/AddToCartButton";
+import AddToCartButton from "@/components/product/AddToCartButton";
 
 function ProductDetail() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
@@ -77,7 +77,7 @@ function ProductDetail() {
               ${data.price}
             </p>
             <div className="bg-blue-600 px-2 py-1 rounded-md self-start text-white text-[20px] font-semibold leading-[1.3] tracking-[0.6px]">
-              -{getProcent(data.price, data.discont_price)}%
+              -{getPercent(data.price, data.discont_price)}%
             </div>
           </div>
           <div className="flex flex-row">

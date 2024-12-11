@@ -2,9 +2,9 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useLocation } from "react-router-dom";
 import { useFetchProductsByCategorieId } from "@/lib/api";
-import PreData from "@/components/PreData";
-import Breadcrumb from "@/components/Breadcrumb";
-import Products from "@/components/ProductsComponent";
+import PreData from "@/components/common/PreData";
+import Breadcrumb from "@/components/common/Breadcrumb";
+import Products from "@/components/product/ProductsComponent";
 
 function Categorie() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);

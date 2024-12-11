@@ -1,5 +1,5 @@
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import Header from "./components/layout/Header";
+import Footer from "./components/layout/Footer";
 
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
@@ -9,12 +9,12 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 import Sales from "./pages/Sales";
-import Categorie from "./pages/Categorie";
+import Categorie from "./pages/Category";
 import { useSetCategories, useSetProducts } from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { addSlugs } from "@/redux/slugsSlice";
 import { nameToSlug } from "./lib/utils";
-import PreData from "@/components/PreData";
+import PreData from "@/components/common/PreData";
 import { useEffect, useState } from "react";
 
 function App() {

@@ -1,4 +1,4 @@
-import SectionDevider from "@/components/SectionDevider";
+import SectionDevider from "@/components/common/SectionDivider";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
@@ -56,10 +56,10 @@ function Cart() {
 
       {!!curCart.length && (
         <div className="flex flex-col lg:flex-row lg:justify-between w-full gap-4">
-          <div className="w-full lg:w-[780px] flex flex-col gap-4">
+          <div className="w-full lg:w-[780px] flex flex-col lg:flex-row gap-4">
             {curCart.map((val) => {
               return (
-                <div className="border border-gray-200 flex flex-row rounded-md">
+                <div className="border border-gray-200 flex lg:flex-row rounded-md">
                   <img
                     className="w-52"
                     src={API_BASE_URL + val.product.image}

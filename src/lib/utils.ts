@@ -18,6 +18,6 @@ export function nameToSlug(name: string): string {
     .replace(/-+/g, '-'); // Удаляем множественные дефисы
 }
 
-export function getProcent(fullPrice: number, curPrice: number) {
+export function getPercent(fullPrice: number, curPrice: number) {
   return Math.round(100 - (curPrice * 100) / fullPrice);
 }

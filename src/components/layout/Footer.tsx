@@ -1,5 +1,5 @@
-import Instagram from "../assets/icons/instagram.svg?react";
-import Whatsapp from "../assets/icons/whatsapp.svg?react";
+import Instagram from "@/assets/icons/instagram.svg?react";
+import Whatsapp from "@/assets/icons/whatsapp.svg?react";
 
 
 

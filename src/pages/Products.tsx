@@ -1,7 +1,7 @@
 import { useSetProducts } from "@/lib/api";
-import PreData from "@/components/PreData";
-import Breadcrumb from "@/components/Breadcrumb";
-import ProductsComponent from "@/components/ProductsComponent";
+import PreData from "@/components/common/PreData";
+import Breadcrumb from "@/components/common/Breadcrumb";
+import ProductsComponent from "@/components/product/ProductsComponent";
 
 type ProductsComponentProps = {
   isIncludeHead?: boolean;

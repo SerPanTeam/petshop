@@ -1,5 +1,5 @@
 import Products from "./Products";
-import Breadcrumb from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/common/Breadcrumb";
 
 function Sales() {
   return (

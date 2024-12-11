@@ -5,7 +5,7 @@ import { API_BASE_URL } from "@/config";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 
-import { getProcent } from "@/lib/utils";
+import { getPercent } from "@/lib/utils";
 import AddToCartButton from "./AddToCartButton";
 
 function Products({ products }: { products: Product[] }) {
@@ -15,11 +15,6 @@ function Products({ products }: { products: Product[] }) {
     return <div>Loading slugs...</div>;
   }
 
-  // function onButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
-  //   e.stopPropagation();
-  //   e.preventDefault();
-  //   console.log("Добавлено в корзину!");
-  // }
 
   function getCatSlugByProdID(prodId: number) {
     //console.log(slugs);
@@ -48,7 +43,7 @@ function Products({ products }: { products: Product[] }) {
                 />
                 {val.discont_price && (
                   <span className="absolute top-4 right-4 bg-blue-600 text-white text-[20px] font-bold px-2 py-1 rounded-lg leading-[130%] tracking-[0.6px]">
-                    -{getProcent(val.price, val.discont_price)}%
+                    -{getPercent(val.price, val.discont_price)}%
                   </span>
                 )}
 

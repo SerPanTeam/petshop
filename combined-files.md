@@ -15,27 +15,32 @@
 │   │       ├── logo.svg
 │   │       ├── minus.svg
 │   │       ├── plus.svg
-│   │       └── whatsapp.svg
+│   │       ├── whatsapp.svg
+│   │       └── x.svg
 │   ├── components
-│   │   ├── ui
-│   │   │   ├── dropdown-menu.tsx
-│   │   │   └── skeleton.tsx
-│   │   ├── Breadcrumb.tsx
-│   │   ├── CategotiesComponent.tsx
-│   │   ├── Footer.tsx
-│   │   ├── Header.tsx
-│   │   ├── PreData.tsx
-│   │   ├── ProductsComponent.tsx
-│   │   ├── ReadMore.tsx
-│   │   ├── ScrollToTop.tsx
-│   │   └── SectionDevider.tsx
+│   │   ├── common
+│   │   │   ├── Breadcrumb.tsx
+│   │   │   ├── PreData.tsx
+│   │   │   ├── ReadMore.tsx
+│   │   │   ├── ScrollToTop.tsx
+│   │   │   └── SectionDivider.tsx
+│   │   ├── layout
+│   │   │   ├── Footer.tsx
+│   │   │   └── Header.tsx
+│   │   ├── product
+│   │   │   ├── AddToCartButton.tsx
+│   │   │   ├── CategoriesComponent.tsx
+│   │   │   └── ProductsComponent.tsx
+│   │   └── ui
+│   │       ├── dropdown-menu.tsx
+│   │       └── skeleton.tsx
 │   ├── lib
 │   │   ├── api.ts
 │   │   └── utils.ts
 │   ├── pages
 │   │   ├── Cart.tsx
-│   │   ├── Categorie.tsx
 │   │   ├── Categories.tsx
+│   │   ├── Category.tsx
 │   │   ├── Home.tsx
 │   │   ├── NotFound.tsx
 │   │   ├── ProductDetail.tsx
@@ -78,8 +83,8 @@
 ## src\App.tsx
 
 ```typescript
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import Header from "./components/layout/Header";
+import Footer from "./components/layout/Footer";
 
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
@@ -89,39 +94,27 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 import Sales from "./pages/Sales";
-import Categorie from "./pages/Categorie";
+import Categorie from "./pages/Category";
 import { useSetCategories, useSetProducts } from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { addSlugs } from "@/redux/slugsSlice";
 import { nameToSlug } from "./lib/utils";
-import PreData from "@/components/PreData";
+import PreData from "@/components/common/PreData";
 import { useEffect, useState } from "react";
 
 function App() {
   const dispatch = useDispatch();
-  // const { data, isLoading, error, isFetched } = useSetCategories();
-  // useEffect(() => {
-  //   // console.log(data, error, isLoading);
-  //   if (!error && !isLoading && Array.isArray(data))
-  //     data?.map((val) => {
-  //       dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title), title: val.title, catId: 0 }));
-  //     });
-  // }, [data, dispatch, isFetched, error, isLoading]);
 
-  // Загрузка категорий
   const {
     data: categoriesData,
     isLoading: isLoadingCategories,
     error: errorCategories,
-    // isFetched: isFetchedCategories,
   } = useSetCategories();
 
-  // Загрузка продуктов
   const {
     data: productsData,
     isLoading: isLoadingProducts,
     error: errorProducts,
-    // isFetched: isFetchedProducts,
   } = useSetProducts();
 
   const [slugsDispatched, setSlugsDispatched] = useState(false);
@@ -135,7 +128,6 @@ function App() {
       !isLoadingProducts &&
       Array.isArray(productsData)
     ) {
-      // Генерация slugs для категорий
       const categorySlugs = categoriesData.map((category) => ({
         id: category.id,
         slug: nameToSlug(category.title),
@@ -144,7 +136,6 @@ function App() {
         type: "category" as const,
       }));
 
-      // Генерация slugs для продуктов
       const productSlugs = productsData.map((product) => ({
         id: product.id,
         slug: nameToSlug(product.title),
@@ -153,7 +144,6 @@ function App() {
         type: "product" as const,
       }));
 
-      // Диспатч slugs в Redux
       dispatch(addSlugs([...categorySlugs, ...productSlugs]));
       setSlugsDispatched(true);
     }
@@ -167,15 +157,16 @@ function App() {
     dispatch,
   ]);
 
-  // Проверка загрузки slugs
   const isLoading =
     isLoadingCategories || isLoadingProducts || !slugsDispatched;
   const error = errorCategories || errorProducts;
 
   return (
     <div className="container min-h-screen flex flex-col justify-between">
-      <Header />
-      <main>
+      <header className="lg:px-10 border-b border-gray-300">
+        <Header />
+      </header>
+      <main className="lg:px-10">
         {isLoading ? (
           <PreData limit={0} isLoading={isLoading} error={error} />
         ) : (
@@ -184,20 +175,19 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/:categoryName" element={<Categorie />} />
-
             <Route path="/sales" element={<Sales />} />
             <Route path="/products" element={<Products />} />
-            {/* <Route path="/products/:productName" element={<ProductDetail />} /> */}
             <Route
               path="/categories/:categoryName/:productName"
               element={<ProductDetail />}
             />
-
             <Route path="*" element={<NotFound />} />
           </Routes>
         )}
       </main>
-      <Footer />
+      <footer className="lg:px-10">
+        <Footer />
+      </footer>
     </div>
   );
 }
@@ -206,7 +196,7 @@ export default App;
 
 ```
 
-## src\components\Breadcrumb.tsx
+## src\components\common\Breadcrumb.tsx
 
 ```typescript
 import { Link } from "react-router-dom";
@@ -260,47 +250,141 @@ export default function Breadcrumb({
 
 ```
 
-## src\components\CategotiesComponent.tsx
+## src\components\common\PreData.tsx
 
 ```typescript
-import { API_BASE_URL } from "@/config";
-import { Link } from "react-router-dom";
-import { nameToSlug } from "@/lib/utils";
-import { useSetCategories } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Category, ProductInCategory } from "@/lib/api";
+import NotFound from "@/pages/NotFound";
 
-type CategoryProps = {
+function PreData({
+  isLoading,
+  limit,
+  error,
+  data,
+}: {
+  isLoading: boolean;
   limit?: number;
-};
+  error: Error | null;
+  data?: Category[] | ProductInCategory[] | undefined;
+}) {
+  if (isLoading) {
+    return (
+      <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-5">
+        {Array.from({ length: limit || 8 }).map((_, index) => (
+          <div key={index} className="flex flex-col justify-center">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-6 w-3/4 mt-4" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
-export default function Category({ limit }: CategoryProps) {
-  const { data } = useSetCategories();
+  if (error instanceof Error) return <p>Error: {error.message}</p>;
+  //   if (!data || data.length === 0) return <p>No data available.</p>;
+  if (!data) return <NotFound />;
+}
+
+export default PreData;
+
+```
+
+## src\components\common\ReadMore.tsx
+
+```typescript
+import { useState } from "react";
+
+const ReadMore = ({
+  text,
+  maxLength = 100,
+}: {
+  text: string;
+  maxLength: number;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleReadMore = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   return (
-    <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-      {data?.slice(0, limit ? limit : data.length).map((category) => (
-        <Link
-          key={category.id}
-          to={"/categories/" + nameToSlug(category.title)}
+    <div className="">
+      <p>
+        {isExpanded ? text : `${text.slice(0, maxLength)}...`}
+        <br />
+        <button
+          onClick={toggleReadMore}
+          className=" mt-4 text-[16px] font-medium leading-[1.3] underline custom-underline"
         >
-          <div className="flex flex-col justify-center">
-            <img src={API_BASE_URL + category.image} alt={category.title} />
-            <h3 className="text-center text-[20px] font-medium leading-[130%] text-[#282828] mt-4">
-              {category.title}
-            </h3>
-          </div>
-        </Link>
-      ))}
+          {isExpanded ? "Read Less" : "Read More"}
+        </button>
+      </p>
+    </div>
+  );
+};
+
+export default ReadMore;
+
+```
+
+## src\components\common\ScrollToTop.tsx
+
+```typescript
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scroll(0, 0);
+  }, [pathname]);
+  return null;
+}
+
+export default ScrollToTop;
+
+```
+
+## src\components\common\SectionDivider.tsx
+
+```typescript
+import { useNavigate } from "react-router-dom";
+
+export default function SectionDevider({
+  titleName,
+  buttonName,
+  url,
+}: {
+  titleName: string;
+  buttonName: string;
+  url: string;
+}) {
+  const navigate = useNavigate();
+  const goToPage = (page: string) => {
+    navigate(page);
+  };
+
+  return (
+    <div className="flex flex-row items-center justify-center px-2 py-4 mt-20">
+      <h2 className="heading-2 whitespace-nowrap">{titleName}</h2>
+      <div className="md:ml-8 ml-2 h-[1px] w-full bg-slate-300"></div>
+      <button
+        className="text-nowrap px-4 py-2 text-small-grey border-slate-300 border-solid border rounded-md"
+        onClick={() => goToPage(url)}
+      >
+        {buttonName}
+      </button>
     </div>
   );
 }
 
 ```
 
-## src\components\Footer.tsx
+## src\components\layout\Footer.tsx
 
 ```typescript
-import Instagram from "../assets/icons/instagram.svg?react";
-import Whatsapp from "../assets/icons/whatsapp.svg?react";
+import Instagram from "@/assets/icons/instagram.svg?react";
+import Whatsapp from "@/assets/icons/whatsapp.svg?react";
 
 
 
@@ -308,7 +392,7 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="px-2 lg:px-10 mt-[100px]">
+    <div className="px-2 mt-[100px]">
       <h2 className="heading-2">Contact</h2>
       <div className="flex flex-col lg:flex-row gap-8 mt-10">
         <div className="flex flex-col gap-8 w-full lg:min-w-[240px]">
@@ -343,7 +427,7 @@ function Footer() {
         </div>
       </div>
       <img className="py-8" src="/images/map.png" alt="PetShop on the MAP" />
-    </footer>
+    </div>
   );
 }
 
@@ -351,13 +435,17 @@ export default Footer;
 
 ```
 
-## src\components\Header.tsx
+## src\components\layout\Header.tsx
 
 ```typescript
 import { Link } from "react-router-dom";
 import { Menu as MenuIco } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import Logo from "@/assets/icons/logo.svg?react";
+import Cart from "@/assets/icons/cart.svg?react";
 
 import {
   DropdownMenu,
@@ -365,10 +453,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-
-import Logo from "../assets/icons/logo.svg?react";
-import Cart from "../assets/icons/cart.svg?react";
-import { useState } from "react";
 
 const menuItems = [
   { id: 1, label: "Main Page", href: "/" },
@@ -384,8 +468,21 @@ function Header() {
     state.cart.cartPositions.reduce((acc, val) => acc + val.count, 0)
   );
 
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const name = menuItems.find((val) => val.href == pathname)?.label;
+    if (name) {
+      document.title = name + " - PetSHOP";
+    } else {
+      document.title =
+        pathname
+          .split("/")[pathname.split("/").length - 1].toUpperCase()
+          .replace(/-/g, " ") + " - PetSHOP";
+    }
+  }, [pathname]);
+
   return (
-    <header className="flex flex-row justify-between items-center px-2 lg:px-10 py-6 border-b border-gray-300">
+    <div className="flex flex-row justify-between items-center px-2 py-6 ">
       <Link to={"/"}>
         <Logo className="transform transition-transform duration-300 hover:scale-125 hover:rotate-45 hover:brightness-125" />
       </Link>
@@ -437,7 +534,7 @@ function Header() {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-    </header>
+    </div>
   );
 }
 
@@ -445,46 +542,110 @@ export default Header;
 
 ```
 
-## src\components\PreData.tsx
+## src\components\product\AddToCartButton.tsx
 
 ```typescript
-import { Skeleton } from "@/components/ui/skeleton";
-import { Category, ProductInCategory } from "@/lib/api";
+import { addProduct } from "@/redux/cartSlice";
+import { Product } from "@/lib/api";
+import { useDispatch } from "react-redux";
+import { useState } from "react";
 
-function PreData({
-  isLoading,
-  limit,
-  error,
+type AddToCartButtonProps = {
+  data: Product;
+  count: number;
+  width: string;
+  customStyles?: string;
+  callbackFunc?: () => void;
+};
+
+const AddToCartButton = ({
   data,
-}: {
-  isLoading: boolean;
-  limit?: number;
-  error: Error | null;
-  data?: Category[] | ProductInCategory[] | undefined;
-}) {
-  if (isLoading) {
-    return (
-      <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-5">
-        {Array.from({ length: limit || 8 }).map((_, index) => (
-          <div key={index} className="flex flex-col justify-center">
-            <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-6 w-3/4 mt-4" />
-          </div>
-        ))}
-      </div>
-    );
+  count,
+  width = "w-full",
+  customStyles = "",
+  callbackFunc,
+}: AddToCartButtonProps) => {
+  const [isAdded, setIsAdded] = useState(false);
+  const dispatch = useDispatch();
+
+  function addToCart(data: Product) {
+    dispatch(addProduct({ product: data, count: count }));
+    //setCount(1);
+    callbackFunc?.();
   }
 
-  if (error instanceof Error) return <p>Error: {error.message}</p>;
-  //   if (!data || data.length === 0) return <p>No data available.</p>;
-  if (!data) return <p>No data available.</p>;
-}
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation(); 
+    e.preventDefault();
+    setIsAdded(true);
+    addToCart(data);
+    setTimeout(() => setIsAdded(false), 500);
+  };
 
-export default PreData;
+  return (
+    <button
+      className={`h-14 ${width} font-bold py-2 px-6 rounded-md transition-all duration-300 ${
+        isAdded
+          ? "bg-white text-black border border-black"
+          : "bg-blue-600 text-white hover:bg-[#282828]"
+      } ${customStyles}`}
+      onClick={(e)=>handleClick(e)}
+    >
+      {isAdded ? "Added" : "Add to Cart"}
+    </button>
+  );
+};
+
+export default AddToCartButton;
+
+{
+  /* <button
+className="h-14 w-full bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
+onClick={() => addToCart(data)}
+>
+Add to Cart
+</button> */
+}
 
 ```
 
-## src\components\ProductsComponent.tsx
+## src\components\product\CategoriesComponent.tsx
+
+```typescript
+import { API_BASE_URL } from "@/config";
+import { Link } from "react-router-dom";
+import { nameToSlug } from "@/lib/utils";
+import { useSetCategories } from "@/lib/api";
+
+type CategoryProps = {
+  limit?: number;
+};
+
+export default function Category({ limit }: CategoryProps) {
+  const { data } = useSetCategories();
+
+  return (
+    <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      {data?.slice(0, limit ? limit : data.length).map((category) => (
+        <Link
+          key={category.id}
+          to={"/categories/" + nameToSlug(category.title)}
+        >
+          <div className="flex flex-col justify-center">
+            <img src={API_BASE_URL + category.image} alt={category.title} />
+            <h3 className="text-center text-[20px] font-medium leading-[130%] text-[#282828] mt-4">
+              {category.title}
+            </h3>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+```
+
+## src\components\product\ProductsComponent.tsx
 
 ```typescript
 import { Product } from "@/lib/api";
@@ -494,7 +655,8 @@ import { API_BASE_URL } from "@/config";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 
-import { getProcent } from "@/lib/utils";
+import { getPercent } from "@/lib/utils";
+import AddToCartButton from "./AddToCartButton";
 
 function Products({ products }: { products: Product[] }) {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
@@ -504,16 +666,11 @@ function Products({ products }: { products: Product[] }) {
   }
 
 
-  function onButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
-    e.stopPropagation(); // Останавливаем всплытие события
-    e.preventDefault(); // Предотвращаем переход по ссылке
-    console.log("Добавлено в корзину!");
-  }
-
   function getCatSlugByProdID(prodId: number) {
     //console.log(slugs);
-    const catID = slugs.filter((val) => val.id == prodId && val.catId > 0)[0].catId;
-    return slugs.filter(val=>val.id == catID && val.catId==0)[0].slug;
+    const catID = slugs.filter((val) => val.id == prodId && val.catId > 0)[0]
+      .catId;
+    return slugs.filter((val) => val.id == catID && val.catId == 0)[0].slug;
   }
 
   return (
@@ -522,7 +679,9 @@ function Products({ products }: { products: Product[] }) {
         return (
           <Link
             key={val.id}
-            to={`/categories/${getCatSlugByProdID(val.id)}/${nameToSlug(val.title)}`}
+            to={`/categories/${getCatSlugByProdID(val.id)}/${nameToSlug(
+              val.title
+            )}`}
           >
             <div className="flex flex-col justify-center border rounded-md items-center gap-5">
               <div className="relative group w-full lg:h-72 md:h-56 h-56 overflow-hidden">
@@ -534,16 +693,30 @@ function Products({ products }: { products: Product[] }) {
                 />
                 {val.discont_price && (
                   <span className="absolute top-4 right-4 bg-blue-600 text-white text-[20px] font-bold px-2 py-1 rounded-lg leading-[130%] tracking-[0.6px]">
-                    -{getProcent(val.price, val.discont_price)}%
+                    -{getPercent(val.price, val.discont_price)}%
                   </span>
                 )}
 
-                <button
+                {/* <button
                   className="w-[90%] absolute bottom-4 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
                   onClick={onButtonClick}
                 >
                   Add to Cart
-                </button>
+                </button> */}
+
+                {/* <button
+className="h-14 w-full bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
+onClick={() => addToCart(data)}
+>
+Add to Cart
+</button> */}
+
+                <AddToCartButton
+                  data={val}
+                  count={1}
+                  width="w-[90%]"
+                  customStyles="absolute bottom-4 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all"
+                />
               </div>
               <div className="w-full px-4 pb-4">
                 <h3 className="text-center text-[20px] font-medium leading-[130%] text-[#282828] mt-4 truncate">
@@ -567,96 +740,6 @@ function Products({ products }: { products: Product[] }) {
 }
 
 export default Products;
-
-```
-
-## src\components\ReadMore.tsx
-
-```typescript
-import { useState } from "react";
-
-const ReadMore = ({
-  text,
-  maxLength = 100,
-}: {
-  text: string;
-  maxLength: number;
-}) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const toggleReadMore = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  return (
-    <div className="">
-      <p>
-        {isExpanded ? text : `${text.slice(0, maxLength)}...`}
-        <br />
-        <button
-          onClick={toggleReadMore}
-          className=" mt-4 text-[16px] font-medium leading-[1.3] underline custom-underline"
-        >
-          {isExpanded ? "Read Less" : "Read More"}
-        </button>
-      </p>
-    </div>
-  );
-};
-
-export default ReadMore;
-
-```
-
-## src\components\ScrollToTop.tsx
-
-```typescript
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    window.scroll(0, 0);
-  }, [pathname]);
-  return null;
-}
-
-export default ScrollToTop;
-
-```
-
-## src\components\SectionDevider.tsx
-
-```typescript
-import { useNavigate } from "react-router-dom";
-
-export default function SectionDevider({
-  titleName,
-  buttonName,
-  url,
-}: {
-  titleName: string;
-  buttonName: string;
-  url: string;
-}) {
-  const navigate = useNavigate();
-  const goToPage = (page: string) => {
-    navigate(page);
-  };
-
-  return (
-    <div className="flex flex-row items-center justify-center px-2 py-4 mt-20">
-      <h2 className="heading-2">{titleName}</h2>
-      <div className="md:ml-8 ml-2 h-[1px] w-full bg-slate-300"></div>
-      <button
-        className="text-nowrap px-4 py-2 text-[16px] text-small-grey border-slate-300 border-solid border rounded-md"
-        onClick={() => goToPage(url)}
-      >
-        {buttonName}
-      </button>
-    </div>
-  );
-}
 
 ```
 
@@ -1108,7 +1191,7 @@ export function nameToSlug(name: string): string {
     .replace(/-+/g, '-'); // Удаляем множественные дефисы
 }
 
-export function getProcent(fullPrice: number, curPrice: number) {
+export function getPercent(fullPrice: number, curPrice: number) {
   return Math.round(100 - (curPrice * 100) / fullPrice);
 }
 ```
@@ -1121,7 +1204,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import ScrollToTop from "./components/ScrollToTop.tsx";
+import ScrollToTop from "./components/common/ScrollToTop.tsx";
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
 
@@ -1143,26 +1226,185 @@ createRoot(document.getElementById("root")!).render(
 ## src\pages\Cart.tsx
 
 ```typescript
+import SectionDevider from "@/components/common/SectionDivider";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "@/config";
+import IcoX from "../assets/icons/x.svg?react";
+import Minus from "@/assets/icons/minus.svg?react";
+import Plus from "@/assets/icons/plus.svg?react";
+import { useDispatch } from "react-redux";
+import { addProduct, delProduct } from "@/redux/cartSlice";
+import { Product } from "@/lib/api";
 
 function Cart() {
+  const curCart = useSelector((state: RootState) => state.cart.cartPositions);
+
+  const navigate = useNavigate();
+
+  const goShop = () => {
+    navigate("/products");
+  };
+
+  const dispatch = useDispatch();
+
+  function onMinusCount(data: Product) {
+    dispatch(addProduct({ product: data, count: -1 }));
+  }
+  function onPlusCount(data: Product) {
+    dispatch(addProduct({ product: data, count: 1 }));
+  }
+
+  function onDelPosition(id: number) {
+    dispatch(delProduct(id));
+  }
+
   return (
-    <div>Cart</div>
-  )
+    <div>
+      <SectionDevider
+        titleName="Shopping cart"
+        buttonName="Back to the store"
+        url="/products"
+      />
+
+      {!curCart.length && (
+        <div className="pt-10 flex flex-col gap-8">
+          <p className="text-black text-[20px] font-medium leading-[1.3]">
+            Looks like you have no items in your basket currently.
+          </p>
+          <button
+            className="w-[314px] text-white text-center text-[20px] font-semibold leading-[1.3] bg-blue-600 px-12 py-4"
+            onClick={goShop}
+          >
+            Continue Shopping
+          </button>
+        </div>
+      )}
+
+      {!!curCart.length && (
+        <div className="flex flex-col lg:flex-row lg:justify-between w-full gap-4">
+          <div className="w-full lg:w-[780px] flex flex-col lg:flex-row gap-4">
+            {curCart.map((val) => {
+              return (
+                <div className="border border-gray-200 flex lg:flex-row rounded-md">
+                  <img
+                    className="w-52"
+                    src={API_BASE_URL + val.product.image}
+                    alt=""
+                  />
+                  <div className="p-8 w-full">
+                    <div className="flex flex-row justify-between">
+                      <p className="text-[20px] font-medium leading-[1.3]">
+                        {val.product.title}
+                      </p>
+                      <button onClick={() => onDelPosition(val.product.id)}>
+                        <IcoX />
+                      </button>
+                    </div>
+
+                    <div className="flex flex-row items-end gap-8">
+                      <div className="flex flex-row mt-8">
+                        <button
+                          className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -mr-1 z-10"
+                          onClick={() => onMinusCount(val.product)}
+                        >
+                          <Minus />
+                        </button>
+                        <input
+                          className="appearance-none w-24 text-center border-t border-b border-l-0 border-r-0 border-gray-300 z-0 text-[20px] font-semibold leading-[1.3]"
+                          value={val.count}
+                          disabled
+                        />
+                        <button
+                          className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -ml-1 z-10"
+                          onClick={() => onPlusCount(val.product)}
+                        >
+                          <Plus />
+                        </button>
+                      </div>
+
+                      <div className="heading-3">
+                        $
+                        {val.product.discont_price
+                          ? val.product.discont_price
+                          : val.product.price}
+                      </div>
+                      <div className="text-gray-500 2xl:text-[40px] text-[30px] font-medium leading-[1.3] line-through">
+                        {val.product.discont_price
+                          ? "$" + val.product.price
+                          : ""}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="w-full lg:w-[548px] bg-gray-100 p-8 rounded-md">
+            <p className="heading-3 mb-6">Order details</p>
+            <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
+              {curCart.reduce((akk, cur) => akk + cur.count, 0)} items
+            </p>
+            <div className="flex flex-row justify-between items-end">
+              <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
+                Total
+              </p>
+              <p className="text-black text-[64px] font-bold leading-[1.1]">
+                ${curCart.reduce((akk,cur)=>{
+                  let cur_price = cur.product.discont_price;
+                  if (!cur_price)
+                    cur_price=cur.product.price;
+                  akk = akk+cur.count*cur_price;
+                  return akk;
+                },0)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default Cart
+export default Cart;
+
 ```
 
-## src\pages\Categorie.tsx
+## src\pages\Categories.tsx
+
+```typescript
+import CategotiesComponent from "@/components/product/CategoriesComponent";
+import Breadcrumb from "@/components/common/Breadcrumb";
+
+
+function Categories() {
+
+
+  return (
+    <div>
+      <Breadcrumb />
+      <h1 className="heading-2 mb-10">Categories</h1>
+
+      <CategotiesComponent />
+    </div>
+  );
+}
+
+export default Categories;
+
+```
+
+## src\pages\Category.tsx
 
 ```typescript
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useLocation } from "react-router-dom";
 import { useFetchProductsByCategorieId } from "@/lib/api";
-import PreData from "@/components/PreData";
-import Breadcrumb from "@/components/Breadcrumb";
-import Products from "@/components/ProductsComponent";
+import PreData from "@/components/common/PreData";
+import Breadcrumb from "@/components/common/Breadcrumb";
+import Products from "@/components/product/ProductsComponent";
 
 function Categorie() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
@@ -1188,7 +1430,9 @@ function Categorie() {
   }
 
   if (!data) {
-    return <div>No products in this category</div>;
+    return (
+      <PreData limit={0} data={data} isLoading={isLoading} error={error} />
+    );
   }
 
   return (
@@ -1197,7 +1441,7 @@ function Categorie() {
         additionalBreadcrumb={[{ name: data.category.title, url: pathname }]}
       />
       <h1 className="heading-2 mb-10">{data.category.title}</h1>
-      <Products products={data.data}/>
+      <Products products={data.data} />
     </>
   );
 }
@@ -1206,36 +1450,12 @@ export default Categorie;
 
 ```
 
-## src\pages\Categories.tsx
-
-```typescript
-import CategotiesComponent from "@/components/CategotiesComponent";
-import Breadcrumb from "@/components/Breadcrumb";
-
-
-function Categories() {
-
-
-  return (
-    <div>
-      <Breadcrumb />
-      <h1 className="heading-2 mb-10">Categories</h1>
-
-      <CategotiesComponent />
-    </div>
-  );
-}
-
-export default Categories;
-
-```
-
 ## src\pages\Home.tsx
 
 ```typescript
 import { useNavigate } from "react-router-dom";
-import SectionDevider from "../components/SectionDevider";
-import Categoty from "../components/CategotiesComponent";
+import SectionDevider from "../components/common/SectionDivider";
+import Categoty from "../components/product/CategoriesComponent";
 import Products from "./Products";
 
 function Home() {
@@ -1247,16 +1467,16 @@ function Home() {
 
   return (
     <>
-      <section className="px-10 lg:py-20 py-2 w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[600px] bg-[url('/images/main-banner.png')] bg-cover bg-center">
-        <h1 className="lg:text-[96px] md:text-[56px] text-[32px] text-white font-bold leading-[110%] lg:mb-10 mb-2">
-          Amazing Discounts on Pets Products!
-        </h1>
-        <button
-          className="py-4 px-12 lg:w-[218px] lg:h-[58px] bg-blue-600 text-white rounded-md text-[20px] text-center font-semibold leading-[130%]"
-          onClick={goSales}
-        >
-          Check out
-        </button>
+      <section className="-mx-10 px-10 lg:py-20 py-2 h-[200px] sm:h-[300px] md:h-[400px] lg:h-[600px] bg-[url('/images/main-banner.png')] bg-cover bg-center">
+          <h1 className="lg:text-[96px] md:text-[56px] text-[32px] text-white font-bold leading-[110%] lg:mb-10 mb-2">
+            Amazing Discounts on Pets Products!
+          </h1>
+          <button
+            className="py-4 px-12 lg:w-[218px] lg:h-[58px] bg-blue-600 text-white rounded-md text-[20px] text-center font-semibold leading-[130%]"
+            onClick={goSales}
+          >
+            Check out
+          </button>
       </section>
 
       <SectionDevider
@@ -1264,9 +1484,14 @@ function Home() {
         buttonName="All categories"
         url="/categories"
       />
-      <Categoty limit={4}/>
+      <Categoty limit={4} />
       <SectionDevider titleName="Sale" buttonName="All sales" url="/sales" />
-      <Products limit={4} isIncludeHead={false} isSalesProducts={true} isIncludeFilters={false}/>
+      <Products
+        limit={4}
+        isIncludeHead={false}
+        isSalesProducts={true}
+        isIncludeFilters={false}
+      />
     </>
   );
 }
@@ -1321,17 +1546,16 @@ export default NotFound;
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useLocation } from "react-router-dom";
-import PreData from "@/components/PreData";
-import { Product, useFetchProductById } from "@/lib/api";
-import Breadcrumb from "@/components/Breadcrumb";
+import PreData from "@/components/common/PreData";
+import { useFetchProductById } from "@/lib/api";
+import Breadcrumb from "@/components/common/Breadcrumb";
 import { API_BASE_URL } from "@/config";
-import { getProcent } from "@/lib/utils";
+import { getPercent } from "@/lib/utils";
 import Minus from "@/assets/icons/minus.svg?react";
 import Plus from "@/assets/icons/plus.svg?react";
-import ReadMore from "@/components/ReadMore";
-import { useDispatch } from "react-redux";
-import { addProduct } from "@/redux/cartSlice";
+import ReadMore from "@/components/common/ReadMore";
 import { useState } from "react";
+import AddToCartButton from "@/components/product/AddToCartButton";
 
 function ProductDetail() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
@@ -1346,7 +1570,7 @@ function ProductDetail() {
 
   const { data, isLoading, error } = useFetchProductById(prodId);
 
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   const [count, setCount] = useState(1);
 
@@ -1362,23 +1586,12 @@ function ProductDetail() {
     if (count > 1) setCount((value) => value - 1);
   }
 
-  // dispatch(addProduct({ product: data, count: count }))
-  function addToCart(data: Product) {
-    dispatch(addProduct({ product: data, count: count }));
-    setCount(1);
-  }
-
-  // if (!slugs.length) {
-  //   return <div>Loading slugs...</div>;
-  // }
-
   if (isLoading || !data) {
     return (
       <PreData limit={0} data={data} isLoading={isLoading} error={error} />
     );
   }
 
-  //console.log(data);
   return (
     <div>
       <Breadcrumb
@@ -1409,7 +1622,7 @@ function ProductDetail() {
               ${data.price}
             </p>
             <div className="bg-blue-600 px-2 py-1 rounded-md self-start text-white text-[20px] font-semibold leading-[1.3] tracking-[0.6px]">
-              -{getProcent(data.price, data.discont_price)}%
+              -{getPercent(data.price, data.discont_price)}%
             </div>
           </div>
           <div className="flex flex-row">
@@ -1433,15 +1646,12 @@ function ProductDetail() {
                   <Plus />
                 </button>
               </div>
-              <button
-                className="h-14 w-full bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
-                onClick={() =>
-                  // dispatch(addProduct({ product: data, count: count }))
-                  addToCart(data)
-                }
-              >
-                Add to Cart
-              </button>
+              <AddToCartButton
+                data={data}
+                count={count}
+                callbackFunc={() => setCount(1)}
+                width="w-full"
+              />
             </div>
           </div>
           <div className="flex flex-col gap-4">
@@ -1464,16 +1674,10 @@ export default ProductDetail;
 ## src\pages\Products.tsx
 
 ```typescript
-// import { useSelector } from "react-redux";
-// import { RootState } from "@/redux/store";
 import { useSetProducts } from "@/lib/api";
-import PreData from "@/components/PreData";
-import Breadcrumb from "@/components/Breadcrumb";
-import ProductsComponent from "@/components/ProductsComponent";
-// import { useEffect } from "react";
-// import { useDispatch } from "react-redux";
-// import { addSlug } from "@/redux/slugsSlice";
-// import { nameToSlug } from "@/lib/utils";
+import PreData from "@/components/common/PreData";
+import Breadcrumb from "@/components/common/Breadcrumb";
+import ProductsComponent from "@/components/product/ProductsComponent";
 
 type ProductsComponentProps = {
   isIncludeHead?: boolean;
@@ -1488,28 +1692,9 @@ function Products({
   isSalesProducts = false,
   isIncludeFilters = true,
 }: ProductsComponentProps) {
-  // const slugs = useSelector((state: RootState) => state.slugs.slugs);
-  // const { pathname } = useLocation();
-
-  // const catSlug = pathname.split("/").pop();
-  // const catId = slugs.find((val) => val.slug === catSlug)?.id;
-
   const { data, isLoading, error, isFetched } = useSetProducts();
-  // const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   // console.log(data, error, isLoading);
-  //   if (!error && !isLoading && Array.isArray(data))
-  //     data?.map((val) => {
-  //       dispatch(addSlug({ id: val.id, slug: nameToSlug(val.title), title: val.title, catId: val.categoryId}));
-  //     });
-  // }, [data, dispatch, isFetched, error, isLoading]);
-
-  // if (!slugs.length) {
-  //   return <div>Loading slugs...</div>;
-  // }
-
-  if (isLoading||!isFetched) {
+  if (isLoading || !isFetched) {
     return (
       <PreData limit={0} data={data} isLoading={isLoading} error={error} />
     );
@@ -1520,7 +1705,9 @@ function Products({
   }
 
   if (!data) {
-    return <div>No products in this category</div>;
+    return (
+      <PreData limit={0} data={data} isLoading={isLoading} error={error} />
+    );
   }
 
   let viewData = data;
@@ -1552,7 +1739,7 @@ export default Products;
 
 ```typescript
 import Products from "./Products";
-import Breadcrumb from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/common/Breadcrumb";
 
 function Sales() {
   return (
@@ -1603,15 +1790,21 @@ const CartSlice = createSlice({
         (val) => val.product.id === action.payload.product.id
       );
       if (curElement) {
-        curElement.count += action.payload.count;
+        if (curElement.count + action.payload.count > 0)
+          curElement.count += action.payload.count;
       } else {
         state.cartPositions.push(action.payload);
       }
     },
+    delProduct(state, action: PayloadAction<number>) {
+      state.cartPositions = state.cartPositions.filter(
+        (val) => val.product.id !== action.payload
+      );
+    },
   },
 });
 
-export const { addProduct } = CartSlice.actions;
+export const { addProduct, delProduct } = CartSlice.actions;
 export default CartSlice.reducer;
 
 ```

@@ -4,8 +4,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import Logo from "../assets/icons/logo.svg?react";
-import Cart from "../assets/icons/cart.svg?react";
+import Logo from "@/assets/icons/logo.svg?react";
+import Cart from "@/assets/icons/cart.svg?react";
 
 import {
   DropdownMenu,
