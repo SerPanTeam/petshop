@@ -9,6 +9,7 @@ import Plus from "@/assets/icons/plus.svg?react";
 import { useDispatch } from "react-redux";
 import { addProduct, delProduct } from "@/redux/cartSlice";
 import { Product } from "@/lib/api";
+import OrderSendForm from "@/components/common/OrderSendForm";
 
 function Cart() {
   const curCart = useSelector((state: RootState) => state.cart.cartPositions);
@@ -55,11 +56,12 @@ function Cart() {
       )}
 
       {!!curCart.length && (
-        <div className="flex flex-col lg:flex-row lg:justify-between w-full gap-4">
-          <div className="w-full lg:w-[780px] flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col xl:flex-row xl:justify-between w-full gap-4">
+          {/* <div className="w-full xl:w-[780px] flex flex-col gap-4"> */}
+          <div className="w-full flex flex-col gap-4">
             {curCart.map((val) => {
               return (
-                <div className="border border-gray-200 flex lg:flex-row rounded-md">
+                <div className="border border-gray-200 flex md:flex-row flex-col-reverse rounded-md items-center">
                   <img
                     className="w-52"
                     src={API_BASE_URL + val.product.image}
@@ -75,7 +77,7 @@ function Cart() {
                       </button>
                     </div>
 
-                    <div className="flex flex-row items-end gap-8">
+                    <div className="flex xxl:flex-row flex-col items-end xl:gap-8 gap-4">
                       <div className="flex flex-row mt-8">
                         <button
                           className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -mr-1 z-10"
@@ -95,17 +97,18 @@ function Cart() {
                           <Plus />
                         </button>
                       </div>
-
-                      <div className="heading-3">
-                        $
-                        {val.product.discont_price
-                          ? val.product.discont_price
-                          : val.product.price}
-                      </div>
-                      <div className="text-gray-500 2xl:text-[40px] text-[30px] font-medium leading-[1.3] line-through">
-                        {val.product.discont_price
-                          ? "$" + val.product.price
-                          : ""}
+                      <div className="flex xl:flex-row flex-col items-end gap-2">
+                        <div className="heading-3">
+                          $
+                          {val.product.discont_price
+                            ? val.product.discont_price
+                            : val.product.price}
+                        </div>
+                        <div className="text-gray-500 2xl:text-[20px] text-[15px] font-medium leading-[1.3] line-through">
+                          {val.product.discont_price
+                            ? "$" + val.product.price
+                            : ""}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -113,12 +116,13 @@ function Cart() {
               );
             })}
           </div>
-          <div className="w-full lg:w-[548px] bg-gray-100 p-8 rounded-md">
+          {/* <div className="w-full xl:w-[548px] bg-gray-100 p-8 rounded-md"> */}
+          <div className=" bg-gray-100 p-8 rounded-md  xl:w-[60%]">
             <p className="heading-3 mb-6">Order details</p>
             <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
               {curCart.reduce((akk, cur) => akk + cur.count, 0)} items
             </p>
-            <div className="flex flex-row justify-between items-end">
+            <div className="flex flex-row justify-between items-end mb-4">
               <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
                 Total
               </p>
@@ -132,6 +136,7 @@ function Cart() {
                 }, 0)}
               </p>
             </div>
+            <OrderSendForm />
           </div>
         </div>
       )}

@@ -4,6 +4,7 @@
 ├── public
 │   ├── images
 │   │   ├── 404.png
+│   │   ├── first-order-banner.png
 │   │   ├── main-banner.png
 │   │   └── map.png
 │   └── .htaccess
@@ -24,7 +25,8 @@
 │   │   │   ├── PreData.tsx
 │   │   │   ├── ReadMore.tsx
 │   │   │   ├── ScrollToTop.tsx
-│   │   │   └── SectionDivider.tsx
+│   │   │   ├── SectionDivider.tsx
+│   │   │   └── SendButton.tsx
 │   │   ├── layout
 │   │   │   ├── Footer.tsx
 │   │   │   └── Header.tsx
@@ -254,11 +256,10 @@ export default function Breadcrumb({
 ## src\components\common\ContactForm.tsx
 
 ```typescript
-// src/components/ContactForm.tsx
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import InputMask from 'react-input-mask';
-
+import { useState } from "react";
+// import { log } from "console";
 
 interface ContactFormData {
   name: string;
@@ -274,42 +275,42 @@ const ContactForm: React.FC = () => {
     reset,
   } = useForm<ContactFormData>();
 
+  const [isAdded, setIsAdded] = useState(false);
   const onSubmit: SubmitHandler<ContactFormData> = (data) => {
-    console.log("Форма отправлена:", data);
-    // Здесь вы можете обработать данные формы, например, отправить их на сервер
-    reset();
+    console.log("Form submitted:", data);
+    reset(); // Reset all form fields
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1000);
   };
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-lg bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-      >
-        <h2 className="text-2xl mb-6 text-gray-800">Контактная форма</h2>
+  // const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   e.stopPropagation();
+  //   e.preventDefault();
+  //   callbackFunc?.();
 
-        {/* Имя */}
+  //   setIsAdded(true);
+  //   setTimeout(() => setIsAdded(false), 1000);
+  // };
+
+  return (
+    <div className="w-full md:w-[400px] ld:w-[600px]">
+      <form onSubmit={handleSubmit(onSubmit)} className="">
+        {/* Name */}
         <div className="mb-4">
-          <label
-            htmlFor="name"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
-            Имя
-          </label>
           <input
             id="name"
             type="text"
             {...register("name", {
-              required: "Имя обязательно",
+              required: "Name is required",
               minLength: {
                 value: 2,
-                message: "Имя должно содержать как минимум 2 символа",
+                message: "Name must be at least 2 characters long",
               },
             })}
-            className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+            className={`bg-transparent placeholder-white shadow appearance-none border rounded w-full py-4 px-8 text-white leading-tight focus:outline-none focus:shadow-outline ${
               errors.name ? "border-red-500" : ""
             }`}
-            placeholder="Ваше имя"
+            placeholder="Name"
             aria-invalid={errors.name ? "true" : "false"}
             aria-describedby={errors.name ? "name-error" : undefined}
           />
@@ -320,38 +321,27 @@ const ContactForm: React.FC = () => {
           )}
         </div>
 
-        {/* Номер телефона с маской */}
+        {/* Phone Number without Mask */}
         <div className="mb-4">
-          <label
-            htmlFor="phone"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
-            Номер телефона
-          </label>
-          <InputMask
-            mask="+7 999 999-99-99"
+          <input
+            id="phone"
+            type="tel"
             {...register("phone", {
-              required: "Номер телефона обязателен",
+              required: "Phone number is required",
               pattern: {
-                value: /^\+7 \d{3} \d{3}-\d{2}-\d{2}$/,
-                message: "Введите корректный номер телефона",
+                // Allows digits, parentheses, plus, and hyphens, minimum 6 characters
+                value: /^[\d()+-]{6,}$/,
+                message:
+                  "Please enter a valid phone number with at least 6 characters. Allowed characters: digits, (), +, -",
               },
             })}
-          >
-            {(inputProps: any) => (
-              <input
-                {...inputProps}
-                type="tel"
-                id="phone"
-                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.phone ? "border-red-500" : ""
-                }`}
-                placeholder="+7 123 456-78-90"
-                aria-invalid={errors.phone ? "true" : "false"}
-                aria-describedby={errors.phone ? "phone-error" : undefined}
-              />
-            )}
-          </InputMask>
+            className={`bg-transparent placeholder-white shadow appearance-none border rounded w-full py-4 px-8 text-white leading-tight focus:outline-none focus:shadow-outline ${
+              errors.phone ? "border-red-500" : ""
+            }`}
+            placeholder="Phone Number"
+            aria-invalid={errors.phone ? "true" : "false"}
+            aria-describedby={errors.phone ? "phone-error" : undefined}
+          />
           {errors.phone && (
             <p id="phone-error" className="text-red-500 text-xs italic mt-2">
               {errors.phone.message}
@@ -359,28 +349,22 @@ const ContactForm: React.FC = () => {
           )}
         </div>
 
-        {/* Электронная почта */}
+        {/* Email */}
         <div className="mb-6">
-          <label
-            htmlFor="email"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
-            Электронная почта
-          </label>
           <input
             id="email"
             type="email"
             {...register("email", {
-              required: "Электронная почта обязательна",
+              required: "Email is required",
               pattern: {
                 value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
-                message: "Введите корректный email",
+                message: "Please enter a valid email address",
               },
             })}
-            className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+            className={`bg-transparent placeholder-white shadow appearance-none border rounded w-full py-4 px-8 text-white leading-tight focus:outline-none focus:shadow-outline ${
               errors.email ? "border-red-500" : ""
             }`}
-            placeholder="example@mail.com"
+            placeholder="Email"
             aria-invalid={errors.email ? "true" : "false"}
             aria-describedby={errors.email ? "email-error" : undefined}
           />
@@ -391,13 +375,24 @@ const ContactForm: React.FC = () => {
           )}
         </div>
 
-        {/* Кнопка отправки */}
+        {/* Submit Button */}
         <div className="flex items-center justify-between">
+          {/* <button
+            type="submit"
+            className="bg-white text-black text-[20px] font-semibold leading-[1.3] w-full px-8 py-4 rounded-md"
+          >
+            Get a discount
+          </button> */}
           <button
             type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className={`h-14 w-full font-bold py-2 px-6 rounded-md transition-all duration-300 ${
+              isAdded
+                ? "bg-gray-200 text-blue-600"
+                : " text-black bg-white hover:bg-black hover:text-white"
+            } `}
+           // onClick={(e) => handleClick(e)}
           >
-            Отправить
+            {isAdded ? "Request Submitted" : "Get a discount"}
           </button>
         </div>
       </form>
@@ -536,6 +531,57 @@ export default function SectionDevider({
     </div>
   );
 }
+
+```
+
+## src\components\common\SendButton.tsx
+
+```typescript
+import { useState } from "react";
+
+type SendButtonProps = {
+  width: string;
+  customStyles?: string;
+  callbackFunc?: () => void;
+  normalText: string;
+  afterSendText: string;
+};
+
+const SendButton = ({
+  width = "w-full",
+  customStyles = "",
+  callbackFunc,
+  normalText,
+  afterSendText,
+}: SendButtonProps) => {
+  const [isAdded, setIsAdded] = useState(false);
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    callbackFunc?.();
+
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1000);
+  };
+
+  return (
+    <button
+      type="submit"
+      className={`h-14 ${width} font-bold py-2 px-6 rounded-md transition-all duration-300 ${
+        isAdded
+          ? "bg-gray-200 text-blue-600"
+          : " text-black bg-white hover:bg-black hover:text-white"
+      } ${customStyles}`}
+      // onClick={(e) => handleClick(e)}
+       onClick={(e) => handleClick(e)}
+    >
+      {isAdded ? afterSendText : normalText}
+    </button>
+  );
+};
+
+export default SendButton;
 
 ```
 
@@ -734,7 +780,7 @@ const AddToCartButton = ({
   }
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     e.preventDefault();
     setIsAdded(true);
     addToCart(data);
@@ -748,7 +794,7 @@ const AddToCartButton = ({
           ? "bg-white text-black border border-black"
           : "bg-blue-600 text-white hover:bg-[#282828]"
       } ${customStyles}`}
-      onClick={(e)=>handleClick(e)}
+      onClick={(e) => handleClick(e)}
     >
       {isAdded ? "Added" : "Add to Cart"}
     </button>
@@ -1442,8 +1488,8 @@ function Cart() {
       )}
 
       {!!curCart.length && (
-        <div className="flex flex-col lg:flex-row lg:justify-between w-full gap-4">
-          <div className="w-full lg:w-[780px] flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col xl:flex-row xl:justify-between w-full gap-4">
+          <div className="w-full lg:w-[780px] flex flex-col gap-4">
             {curCart.map((val) => {
               return (
                 <div className="border border-gray-200 flex lg:flex-row rounded-md">
@@ -1626,8 +1672,8 @@ function Home() {
   };
 
   return (
-    <>
-      <section className="-mx-10 px-10 lg:py-20 py-2 h-[200px] sm:h-[300px] md:h-[400px] lg:h-[600px] bg-[url('/images/main-banner.png')] bg-cover bg-center">
+    <> 
+      <section className="px-10 lg:py-20 py-2 h-[200px] sm:h-[300px] md:h-[400px] lg:h-[600px] bg-[url('/images/main-banner.png')] bg-cover bg-center">
         <h1 className="lg:text-[96px] md:text-[56px] text-[32px] text-white font-bold leading-[110%] lg:mb-10 mb-2">
           Amazing Discounts on Pets Products!
         </h1>
@@ -1646,7 +1692,15 @@ function Home() {
       />
       <Categoty limit={4} />
 
-      <ContactForm />
+      <section className="px-8 pt-8 flex flex-col gap-6 bg-gradient-to-tr from-[#2451C6] to-[#0D50FF] mt-24">
+        <div className="flex flex-row justify-center heading-2 text-white">
+          5% off on the first order
+        </div>
+
+        <div className="pb-10 flex flex-row justify-end bg-[url('/images/first-order-banner.png')] bg-left-bottom bg-no-repeat">
+          <ContactForm />
+        </div>
+      </section>
 
       <SectionDevider titleName="Sale" buttonName="All sales" url="/sales" />
       <Products
