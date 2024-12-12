@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/config";
-import IcoX from "../assets/icons/x.svg?react";
+import IcoX from "@/assets/icons/x.svg?react";
 import Minus from "@/assets/icons/minus.svg?react";
 import Plus from "@/assets/icons/plus.svg?react";
 import { useDispatch } from "react-redux";
@@ -123,13 +123,13 @@ function Cart() {
                 Total
               </p>
               <p className="text-black text-[64px] font-bold leading-[1.1]">
-                ${curCart.reduce((akk,cur)=>{
+                $
+                {curCart.reduce((akk, cur) => {
                   let cur_price = cur.product.discont_price;
-                  if (!cur_price)
-                    cur_price=cur.product.price;
-                  akk = akk+cur.count*cur_price;
+                  if (!cur_price) cur_price = cur.product.price;
+                  akk = akk + cur.count * cur_price;
                   return akk;
-                },0)}
+                }, 0)}
               </p>
             </div>
           </div>

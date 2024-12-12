@@ -20,6 +20,7 @@
 │   ├── components
 │   │   ├── common
 │   │   │   ├── Breadcrumb.tsx
+│   │   │   ├── ContactForm.tsx
 │   │   │   ├── PreData.tsx
 │   │   │   ├── ReadMore.tsx
 │   │   │   ├── ScrollToTop.tsx
@@ -247,6 +248,164 @@ export default function Breadcrumb({
     </div>
   );
 }
+
+```
+
+## src\components\common\ContactForm.tsx
+
+```typescript
+// src/components/ContactForm.tsx
+import React from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import InputMask from 'react-input-mask';
+
+
+interface ContactFormData {
+  name: string;
+  phone: string;
+  email: string;
+}
+
+const ContactForm: React.FC = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<ContactFormData>();
+
+  const onSubmit: SubmitHandler<ContactFormData> = (data) => {
+    console.log("Форма отправлена:", data);
+    // Здесь вы можете обработать данные формы, например, отправить их на сервер
+    reset();
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="w-full max-w-lg bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
+      >
+        <h2 className="text-2xl mb-6 text-gray-800">Контактная форма</h2>
+
+        {/* Имя */}
+        <div className="mb-4">
+          <label
+            htmlFor="name"
+            className="block text-gray-700 text-sm font-bold mb-2"
+          >
+            Имя
+          </label>
+          <input
+            id="name"
+            type="text"
+            {...register("name", {
+              required: "Имя обязательно",
+              minLength: {
+                value: 2,
+                message: "Имя должно содержать как минимум 2 символа",
+              },
+            })}
+            className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+              errors.name ? "border-red-500" : ""
+            }`}
+            placeholder="Ваше имя"
+            aria-invalid={errors.name ? "true" : "false"}
+            aria-describedby={errors.name ? "name-error" : undefined}
+          />
+          {errors.name && (
+            <p id="name-error" className="text-red-500 text-xs italic mt-2">
+              {errors.name.message}
+            </p>
+          )}
+        </div>
+
+        {/* Номер телефона с маской */}
+        <div className="mb-4">
+          <label
+            htmlFor="phone"
+            className="block text-gray-700 text-sm font-bold mb-2"
+          >
+            Номер телефона
+          </label>
+          <InputMask
+            mask="+7 999 999-99-99"
+            {...register("phone", {
+              required: "Номер телефона обязателен",
+              pattern: {
+                value: /^\+7 \d{3} \d{3}-\d{2}-\d{2}$/,
+                message: "Введите корректный номер телефона",
+              },
+            })}
+          >
+            {(inputProps: any) => (
+              <input
+                {...inputProps}
+                type="tel"
+                id="phone"
+                className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                  errors.phone ? "border-red-500" : ""
+                }`}
+                placeholder="+7 123 456-78-90"
+                aria-invalid={errors.phone ? "true" : "false"}
+                aria-describedby={errors.phone ? "phone-error" : undefined}
+              />
+            )}
+          </InputMask>
+          {errors.phone && (
+            <p id="phone-error" className="text-red-500 text-xs italic mt-2">
+              {errors.phone.message}
+            </p>
+          )}
+        </div>
+
+        {/* Электронная почта */}
+        <div className="mb-6">
+          <label
+            htmlFor="email"
+            className="block text-gray-700 text-sm font-bold mb-2"
+          >
+            Электронная почта
+          </label>
+          <input
+            id="email"
+            type="email"
+            {...register("email", {
+              required: "Электронная почта обязательна",
+              pattern: {
+                value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+                message: "Введите корректный email",
+              },
+            })}
+            className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+              errors.email ? "border-red-500" : ""
+            }`}
+            placeholder="example@mail.com"
+            aria-invalid={errors.email ? "true" : "false"}
+            aria-describedby={errors.email ? "email-error" : undefined}
+          />
+          {errors.email && (
+            <p id="email-error" className="text-red-500 text-xs italic mt-2">
+              {errors.email.message}
+            </p>
+          )}
+        </div>
+
+        {/* Кнопка отправки */}
+        <div className="flex items-center justify-between">
+          <button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Отправить
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default ContactForm;
 
 ```
 
@@ -1231,7 +1390,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/config";
-import IcoX from "../assets/icons/x.svg?react";
+import IcoX from "@/assets/icons/x.svg?react";
 import Minus from "@/assets/icons/minus.svg?react";
 import Plus from "@/assets/icons/plus.svg?react";
 import { useDispatch } from "react-redux";
@@ -1351,13 +1510,13 @@ function Cart() {
                 Total
               </p>
               <p className="text-black text-[64px] font-bold leading-[1.1]">
-                ${curCart.reduce((akk,cur)=>{
+                $
+                {curCart.reduce((akk, cur) => {
                   let cur_price = cur.product.discont_price;
-                  if (!cur_price)
-                    cur_price=cur.product.price;
-                  akk = akk+cur.count*cur_price;
+                  if (!cur_price) cur_price = cur.product.price;
+                  akk = akk + cur.count * cur_price;
                   return akk;
-                },0)}
+                }, 0)}
               </p>
             </div>
           </div>
@@ -1454,9 +1613,10 @@ export default Categorie;
 
 ```typescript
 import { useNavigate } from "react-router-dom";
-import SectionDevider from "../components/common/SectionDivider";
-import Categoty from "../components/product/CategoriesComponent";
+import SectionDevider from "@/components/common/SectionDivider";
+import Categoty from "@/components/product/CategoriesComponent";
 import Products from "./Products";
+import ContactForm from "@/components/common/ContactForm";
 
 function Home() {
   const navigate = useNavigate();
@@ -1468,15 +1628,15 @@ function Home() {
   return (
     <>
       <section className="-mx-10 px-10 lg:py-20 py-2 h-[200px] sm:h-[300px] md:h-[400px] lg:h-[600px] bg-[url('/images/main-banner.png')] bg-cover bg-center">
-          <h1 className="lg:text-[96px] md:text-[56px] text-[32px] text-white font-bold leading-[110%] lg:mb-10 mb-2">
-            Amazing Discounts on Pets Products!
-          </h1>
-          <button
-            className="py-4 px-12 lg:w-[218px] lg:h-[58px] bg-blue-600 text-white rounded-md text-[20px] text-center font-semibold leading-[130%]"
-            onClick={goSales}
-          >
-            Check out
-          </button>
+        <h1 className="lg:text-[96px] md:text-[56px] text-[32px] text-white font-bold leading-[110%] lg:mb-10 mb-2">
+          Amazing Discounts on Pets Products!
+        </h1>
+        <button
+          className="py-4 px-12 lg:w-[218px] lg:h-[58px] bg-blue-600 text-white rounded-md text-[20px] text-center font-semibold leading-[130%]"
+          onClick={goSales}
+        >
+          Check out
+        </button>
       </section>
 
       <SectionDevider
@@ -1485,6 +1645,9 @@ function Home() {
         url="/categories"
       />
       <Categoty limit={4} />
+
+      <ContactForm />
+
       <SectionDevider titleName="Sale" buttonName="All sales" url="/sales" />
       <Products
         limit={4}

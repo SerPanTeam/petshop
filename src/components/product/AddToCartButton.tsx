@@ -28,7 +28,7 @@ const AddToCartButton = ({
   }
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     e.preventDefault();
     setIsAdded(true);
     addToCart(data);
@@ -42,7 +42,7 @@ const AddToCartButton = ({
           ? "bg-white text-black border border-black"
           : "bg-blue-600 text-white hover:bg-[#282828]"
       } ${customStyles}`}
-      onClick={(e)=>handleClick(e)}
+      onClick={(e) => handleClick(e)}
     >
       {isAdded ? "Added" : "Add to Cart"}
     </button>
