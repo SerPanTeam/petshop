@@ -1,6 +1,7 @@
-// ContactForm.tsx
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { useState } from "react";
+// import { log } from "console";
 
 interface ContactFormData {
   name: string;
@@ -16,10 +17,22 @@ const ContactForm: React.FC = () => {
     reset,
   } = useForm<ContactFormData>();
 
+  const [isAdded, setIsAdded] = useState(false);
   const onSubmit: SubmitHandler<ContactFormData> = (data) => {
     console.log("Form submitted:", data);
     reset(); // Reset all form fields
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1000);
   };
+
+  // const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   e.stopPropagation();
+  //   e.preventDefault();
+  //   callbackFunc?.();
+
+  //   setIsAdded(true);
+  //   setTimeout(() => setIsAdded(false), 1000);
+  // };
 
   return (
     <div className="w-full md:w-[400px] ld:w-[600px]">
@@ -106,11 +119,22 @@ const ContactForm: React.FC = () => {
 
         {/* Submit Button */}
         <div className="flex items-center justify-between">
-          <button
+          {/* <button
             type="submit"
             className="bg-white text-black text-[20px] font-semibold leading-[1.3] w-full px-8 py-4 rounded-md"
           >
             Get a discount
+          </button> */}
+          <button
+            type="submit"
+            className={`h-14 w-full font-bold py-2 px-6 rounded-md transition-all duration-300 ${
+              isAdded
+                ? "bg-gray-200 text-blue-600"
+                : " text-black bg-white hover:bg-black hover:text-white"
+            } `}
+           // onClick={(e) => handleClick(e)}
+          >
+            {isAdded ? "Request Submitted" : "Get a discount"}
           </button>
         </div>
       </form>
