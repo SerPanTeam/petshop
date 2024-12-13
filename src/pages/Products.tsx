@@ -2,8 +2,11 @@ import { useSetProducts } from "@/lib/api";
 import PreData from "@/components/common/PreData";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import ProductsComponent from "@/components/product/ProductsComponent";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "@/lib/api";
+import { useSearchParams } from "react-router-dom";
+
+
 
 type ProductsComponentProps = {
   isIncludeHead?: boolean;
@@ -21,15 +24,47 @@ function Products({
   dataStart,
 }: ProductsComponentProps) {
   const { data: newData, isLoading, error, isFetched } = useSetProducts();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   let data: Product[] = [];
   if (dataStart?.length) data = dataStart;
   else data = newData || [];
 
-  const [priceFrom, setPriceFrom] = useState<number | "">("");
-  const [priceTo, setPriceTo] = useState<number | "">("");
-  const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(false);
-  const [sortOption, setSortOption] = useState<string>("default");
+
+
+  
+
+  // const [priceFrom, setPriceFrom] = useState<number | "">("");
+  // const [priceTo, setPriceTo] = useState<number | "">("");
+  // const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(false);
+  // const [sortOption, setSortOption] = useState<string>("default");
+
+  // Извлекаем значения из URL при монтировании
+  const initialPriceFrom = searchParams.get("priceFrom");
+  const initialPriceTo = searchParams.get("priceTo");
+  const initialOnlyDiscounted = searchParams.get("onlyDiscounted") === "true";
+  const initialSortOption = searchParams.get("sort") || "default";
+
+  const [priceFrom, setPriceFrom] = useState<number | "">(
+    initialPriceFrom ? parseFloat(initialPriceFrom) : ""
+  );
+  const [priceTo, setPriceTo] = useState<number | "">(
+    initialPriceTo ? parseFloat(initialPriceTo) : ""
+  );
+  const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(initialOnlyDiscounted);
+  const [sortOption, setSortOption] = useState<string>(initialSortOption);
+
+  // Обновляем URL при изменении фильтров
+  useEffect(() => {
+    const params: Record<string, string> = {};
+
+    if (priceFrom !== "") params.priceFrom = String(priceFrom);
+    if (priceTo !== "") params.priceTo = String(priceTo);
+    if (onlyDiscounted) params.onlyDiscounted = String(onlyDiscounted);
+    if (sortOption !== "default") params.sort = sortOption;
+
+    setSearchParams(params);
+  }, [priceFrom, priceTo, onlyDiscounted, sortOption, setSearchParams]);
 
   if (isLoading || !isFetched) {
     return (
