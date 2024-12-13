@@ -456,10 +456,10 @@ export default Modal;
 ## src\components\common\OrderSendForm.tsx
 
 ```typescript
-import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface ContactFormData {
   name: string;
@@ -477,7 +477,21 @@ const OrderSendForm: React.FC<OrderSendFormProps> = ({ callback }) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<ContactFormData>();
+
+  // Получаем данные пользователя из Redux
+  const { name, phone, email } = useSelector(
+    (state: RootState) => state.user
+  );
+
+  useEffect(() => {
+    // Если пользователь уже залогинен и есть данные,
+    // устанавливаем их в поля формы
+    if (name) setValue("name", name);
+    if (phone) setValue("phone", phone);
+    if (email) setValue("email", email);
+  }, [name, phone, email, setValue]);
 
   const [isAdded, setIsAdded] = useState(false);
   const onSubmit: SubmitHandler<ContactFormData> = (data) => {
@@ -1548,7 +1562,7 @@ const fetchProductById = async (
     throw new Error("Product not found");
   }
   
-  return data[0]; // Возвращаем первый элемент массива
+  return data[0];
 };
 
 export const useFetchProductById = (id: number | undefined) => {
@@ -1630,6 +1644,7 @@ import Minus from "@/assets/icons/minus.svg?react";
 import Plus from "@/assets/icons/plus.svg?react";
 import { useDispatch } from "react-redux";
 import { addProduct, delProduct, resetCart } from "@/redux/cartSlice";
+import { closeKupon } from "@/redux/userSlice";
 import { Product } from "@/lib/api";
 import OrderSendForm from "@/components/common/OrderSendForm";
 import { useState } from "react";
@@ -1638,11 +1653,14 @@ import Modal from "@/components/common/Modal";
 function Cart() {
   const curCart = useSelector((state: RootState) => state.cart.cartPositions);
 
+  const { kupon } = useSelector((state: RootState) => state.user);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
     setIsModalOpen(false);
     dispatch(resetCart());
+    dispatch(closeKupon());
   };
 
   function sendOrder() {
@@ -1699,11 +1717,11 @@ function Cart() {
               return (
                 <div className="border border-gray-200 flex md:flex-row flex-col-reverse rounded-md items-center">
                   <img
-                    className="w-52"
+                    className="md:w-52 w-full"
                     src={API_BASE_URL + val.product.image}
                     alt=""
                   />
-                  <div className="p-8 w-full">
+                  <div className="p-2 md:p-8 w-full">
                     <div className="flex flex-row justify-between">
                       <p className="text-[20px] font-medium leading-[1.3]">
                         {val.product.title}
@@ -1758,18 +1776,26 @@ function Cart() {
             <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
               {curCart.reduce((akk, cur) => akk + cur.count, 0)} items
             </p>
+            {kupon && (
+              <p className="text-red-700">-5% off on the first order</p>
+            )}
             <div className="flex flex-row justify-between items-end mb-4">
               <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
                 Total
               </p>
-              <p className="text-black text-[64px] font-bold leading-[1.1]">
+              <p className="text-black xl:text-[64px] text-[34px] font-bold leading-[1.1]">
                 $
-                {curCart.reduce((akk, cur) => {
-                  let cur_price = cur.product.discont_price;
-                  if (!cur_price) cur_price = cur.product.price;
-                  akk = akk + cur.count * cur_price;
-                  return akk;
-                }, 0)}
+                {(
+                  curCart.reduce((akk, cur) => {
+                    // let cur_price = cur.product.discont_price;
+                    // if (!cur_price) cur_price = cur.product.price;
+                    const cur_price =
+                      cur.product.discont_price ?? cur.product.price; // Убедимся, что это число
+
+                    akk = akk + cur.count * cur_price;
+                    return akk;
+                  }, 0) * (kupon ? 0.95 : 1)
+                ).toFixed(2)}
               </p>
             </div>
             <OrderSendForm callback={sendOrder} />
@@ -2118,8 +2144,11 @@ import { useSetProducts } from "@/lib/api";
 import PreData from "@/components/common/PreData";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import ProductsComponent from "@/components/product/ProductsComponent";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "@/lib/api";
+import { useSearchParams } from "react-router-dom";
+
+
 
 type ProductsComponentProps = {
   isIncludeHead?: boolean;
@@ -2137,15 +2166,47 @@ function Products({
   dataStart,
 }: ProductsComponentProps) {
   const { data: newData, isLoading, error, isFetched } = useSetProducts();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   let data: Product[] = [];
   if (dataStart?.length) data = dataStart;
   else data = newData || [];
 
-  const [priceFrom, setPriceFrom] = useState<number | "">("");
-  const [priceTo, setPriceTo] = useState<number | "">("");
-  const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(false);
-  const [sortOption, setSortOption] = useState<string>("default");
+
+
+  
+
+  // const [priceFrom, setPriceFrom] = useState<number | "">("");
+  // const [priceTo, setPriceTo] = useState<number | "">("");
+  // const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(false);
+  // const [sortOption, setSortOption] = useState<string>("default");
+
+  // Извлекаем значения из URL при монтировании
+  const initialPriceFrom = searchParams.get("priceFrom");
+  const initialPriceTo = searchParams.get("priceTo");
+  const initialOnlyDiscounted = searchParams.get("onlyDiscounted") === "true";
+  const initialSortOption = searchParams.get("sort") || "default";
+
+  const [priceFrom, setPriceFrom] = useState<number | "">(
+    initialPriceFrom ? parseFloat(initialPriceFrom) : ""
+  );
+  const [priceTo, setPriceTo] = useState<number | "">(
+    initialPriceTo ? parseFloat(initialPriceTo) : ""
+  );
+  const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(initialOnlyDiscounted);
+  const [sortOption, setSortOption] = useState<string>(initialSortOption);
+
+  // Обновляем URL при изменении фильтров
+  useEffect(() => {
+    const params: Record<string, string> = {};
+
+    if (priceFrom !== "") params.priceFrom = String(priceFrom);
+    if (priceTo !== "") params.priceTo = String(priceTo);
+    if (onlyDiscounted) params.onlyDiscounted = String(onlyDiscounted);
+    if (sortOption !== "default") params.sort = sortOption;
+
+    setSearchParams(params);
+  }, [priceFrom, priceTo, onlyDiscounted, sortOption, setSearchParams]);
 
   if (isLoading || !isFetched) {
     return (

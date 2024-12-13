@@ -32,14 +32,7 @@ function Products({
 
 
 
-  
 
-  // const [priceFrom, setPriceFrom] = useState<number | "">("");
-  // const [priceTo, setPriceTo] = useState<number | "">("");
-  // const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(false);
-  // const [sortOption, setSortOption] = useState<string>("default");
-
-  // Извлекаем значения из URL при монтировании
   const initialPriceFrom = searchParams.get("priceFrom");
   const initialPriceTo = searchParams.get("priceTo");
   const initialOnlyDiscounted = searchParams.get("onlyDiscounted") === "true";
@@ -54,7 +47,6 @@ function Products({
   const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(initialOnlyDiscounted);
   const [sortOption, setSortOption] = useState<string>(initialSortOption);
 
-  // Обновляем URL при изменении фильтров
   useEffect(() => {
     const params: Record<string, string> = {};
 
