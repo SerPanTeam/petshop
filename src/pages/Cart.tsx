@@ -81,11 +81,11 @@ function Cart() {
               return (
                 <div className="border border-gray-200 flex md:flex-row flex-col-reverse rounded-md items-center">
                   <img
-                    className="w-52"
+                    className="md:w-52 w-full"
                     src={API_BASE_URL + val.product.image}
                     alt=""
                   />
-                  <div className="p-8 w-full">
+                  <div className="p-2 md:p-8 w-full">
                     <div className="flex flex-row justify-between">
                       <p className="text-[20px] font-medium leading-[1.3]">
                         {val.product.title}
@@ -147,7 +147,7 @@ function Cart() {
               <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
                 Total
               </p>
-              <p className="text-black text-[64px] font-bold leading-[1.1]">
+              <p className="text-black xl:text-[64px] text-[34px] font-bold leading-[1.1]">
                 $
                 {(
                   curCart.reduce((akk, cur) => {

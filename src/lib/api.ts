@@ -87,7 +87,7 @@ const fetchProductById = async (
     throw new Error("Product not found");
   }
   
-  return data[0]; // Возвращаем первый элемент массива
+  return data[0];
 };
 
 export const useFetchProductById = (id: number | undefined) => {
