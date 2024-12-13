@@ -22,6 +22,8 @@
 │   │   ├── common
 │   │   │   ├── Breadcrumb.tsx
 │   │   │   ├── ContactForm.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── OrderSendForm.tsx
 │   │   │   ├── PreData.tsx
 │   │   │   ├── ReadMore.tsx
 │   │   │   ├── ScrollToTop.tsx
@@ -259,7 +261,11 @@ export default function Breadcrumb({
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useState } from "react";
-// import { log } from "console";
+
+import { useDispatch } from "react-redux";
+import { login } from "@/redux/userSlice";
+// import { useSelector } from "react-redux";
+// import { RootState } from "@/redux/store";
 
 interface ContactFormData {
   name: string;
@@ -275,22 +281,24 @@ const ContactForm: React.FC = () => {
     reset,
   } = useForm<ContactFormData>();
 
+  const dispatch = useDispatch();
+
   const [isAdded, setIsAdded] = useState(false);
   const onSubmit: SubmitHandler<ContactFormData> = (data) => {
     console.log("Form submitted:", data);
+    dispatch(
+      login({
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        kupon: true,
+        loggedIn: true,
+      })
+    );
     reset(); // Reset all form fields
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1000);
   };
-
-  // const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-  //   e.stopPropagation();
-  //   e.preventDefault();
-  //   callbackFunc?.();
-
-  //   setIsAdded(true);
-  //   setTimeout(() => setIsAdded(false), 1000);
-  // };
 
   return (
     <div className="w-full md:w-[400px] ld:w-[600px]">
@@ -390,7 +398,7 @@ const ContactForm: React.FC = () => {
                 ? "bg-gray-200 text-blue-600"
                 : " text-black bg-white hover:bg-black hover:text-white"
             } `}
-           // onClick={(e) => handleClick(e)}
+            // onClick={(e) => handleClick(e)}
           >
             {isAdded ? "Request Submitted" : "Get a discount"}
           </button>
@@ -401,6 +409,203 @@ const ContactForm: React.FC = () => {
 };
 
 export default ContactForm;
+
+```
+
+## src\components\common\Modal.tsx
+
+```typescript
+import IcoX from "@/assets/icons/x.svg?react";
+
+type ModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title?: string;
+};
+
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) => {
+  if (!isOpen) return null; 
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      onClick={onClose} 
+    >
+      <div
+        className="bg-blue-600 rounded-lg p-6 max-w-lg w-full relative"
+        onClick={(e) => e.stopPropagation()} 
+
+      >
+        {title && <h2 className="text-xxl font-bold mb-4 text-white">{title}</h2>}
+        {children}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-black hover:text-gray-500"
+        >
+          <IcoX/>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Modal;
+
+```
+
+## src\components\common\OrderSendForm.tsx
+
+```typescript
+import React from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { useState } from "react";
+
+
+interface ContactFormData {
+  name: string;
+  phone: string;
+  email: string;
+}
+
+interface OrderSendFormProps {
+  callback: () => void;
+}
+
+const OrderSendForm: React.FC<OrderSendFormProps> = ({ callback }) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<ContactFormData>();
+
+  const [isAdded, setIsAdded] = useState(false);
+  const onSubmit: SubmitHandler<ContactFormData> = (data) => {
+    console.log("Form submitted:", data);
+    reset(); // Reset all form fields
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1000);
+    callback();
+  };
+
+  // const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   e.stopPropagation();
+  //   e.preventDefault();
+  //   callbackFunc?.();
+
+  //   setIsAdded(true);
+  //   setTimeout(() => setIsAdded(false), 1000);
+  // };
+
+  return (
+    <div className="w-full">
+      <form onSubmit={handleSubmit(onSubmit)} className="">
+        {/* Name */}
+        <div className="mb-4">
+          <input
+            id="name"
+            type="text"
+            {...register("name", {
+              required: "Name is required",
+              minLength: {
+                value: 2,
+                message: "Name must be at least 2 characters long",
+              },
+            })}
+            className={`bg-white placeholder-gray-400 shadow appearance-none border rounded w-full py-4 px-8 text-black leading-tight focus:outline-none focus:shadow-outline ${
+              errors.name ? "border-red-500" : ""
+            }`}
+            placeholder="Name"
+            aria-invalid={errors.name ? "true" : "false"}
+            aria-describedby={errors.name ? "name-error" : undefined}
+          />
+          {errors.name && (
+            <p id="name-error" className="text-red-500 text-xs italic mt-2">
+              {errors.name.message}
+            </p>
+          )}
+        </div>
+
+        {/* Phone Number without Mask */}
+        <div className="mb-4">
+          <input
+            id="phone"
+            type="tel"
+            {...register("phone", {
+              required: "Phone number is required",
+              pattern: {
+                // Allows digits, parentheses, plus, and hyphens, minimum 6 characters
+                value: /^[\d()+-]{6,}$/,
+                message:
+                  "Please enter a valid phone number with at least 6 characters. Allowed characters: digits, (), +, -",
+              },
+            })}
+            className={`bg-white placeholder-gray-400 shadow appearance-none border rounded w-full py-4 px-8 text-black leading-tight focus:outline-none focus:shadow-outline ${
+              errors.phone ? "border-red-500" : ""
+            }`}
+            placeholder="Phone Number"
+            aria-invalid={errors.phone ? "true" : "false"}
+            aria-describedby={errors.phone ? "phone-error" : undefined}
+          />
+          {errors.phone && (
+            <p id="phone-error" className="text-red-500 text-xs italic mt-2">
+              {errors.phone.message}
+            </p>
+          )}
+        </div>
+
+        {/* Email */}
+        <div className="mb-6">
+          <input
+            id="email"
+            type="email"
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+                message: "Please enter a valid email address",
+              },
+            })}
+            className={`bg-white placeholder-gray-400 shadow appearance-none border rounded w-full py-4 px-8 text-black leading-tight focus:outline-none focus:shadow-outline ${
+              errors.email ? "border-red-500" : ""
+            }`}
+            placeholder="Email"
+            aria-invalid={errors.email ? "true" : "false"}
+            aria-describedby={errors.email ? "email-error" : undefined}
+          />
+          {errors.email && (
+            <p id="email-error" className="text-red-500 text-xs italic mt-2">
+              {errors.email.message}
+            </p>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex items-center justify-between">
+          {/* <button
+            type="submit"
+            className="bg-white text-black text-[20px] font-semibold leading-[1.3] w-full px-8 py-4 rounded-md"
+          >
+            Get a discount
+          </button> */}
+          <button
+            type="submit"
+            className={`h-14 w-full font-bold py-2 px-6 rounded-md transition-all duration-300 ${
+              isAdded
+                ? "bg-gray-200 text-blue-600"
+                : " text-white bg-blue-600 hover:bg-black hover:text-white"
+            } `}
+            // onClick={(e) => handleClick(e)}
+          >
+            {isAdded ? "Order sendet" : "Order"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default OrderSendForm;
 
 ```
 
@@ -870,7 +1075,6 @@ function Products({ products }: { products: Product[] }) {
     return <div>Loading slugs...</div>;
   }
 
-
   function getCatSlugByProdID(prodId: number) {
     //console.log(slugs);
     const catID = slugs.filter((val) => val.id == prodId && val.catId > 0)[0]
@@ -890,7 +1094,6 @@ function Products({ products }: { products: Product[] }) {
           >
             <div className="flex flex-col justify-center border rounded-md items-center gap-5">
               <div className="relative group w-full lg:h-72 md:h-56 h-56 overflow-hidden">
-                {/* <div className="relative group"> */}
                 <img
                   className="w-full object-cover h-full"
                   src={API_BASE_URL + val.image}
@@ -901,20 +1104,6 @@ function Products({ products }: { products: Product[] }) {
                     -{getPercent(val.price, val.discont_price)}%
                   </span>
                 )}
-
-                {/* <button
-                  className="w-[90%] absolute bottom-4 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
-                  onClick={onButtonClick}
-                >
-                  Add to Cart
-                </button> */}
-
-                {/* <button
-className="h-14 w-full bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
-onClick={() => addToCart(data)}
->
-Add to Cart
-</button> */}
 
                 <AddToCartButton
                   data={val}
@@ -1190,7 +1379,7 @@ export const API_BASE_URL = "https://pet-shop-backend.fly.dev";
   }
   .heading-3 {
     @apply text-txtBlack font-semibold leading-[110%];
-    @apply xl:text-[40px] md:text-[30px] text-[20px];
+    @apply xl:text-[36px] md:text-[28px] text-[20px];
   }
   .text-small-grey {
     @apply text-txtGrey font-medium leading-[130%] md:text-[20px] text-[12px];
@@ -1440,11 +1629,26 @@ import IcoX from "@/assets/icons/x.svg?react";
 import Minus from "@/assets/icons/minus.svg?react";
 import Plus from "@/assets/icons/plus.svg?react";
 import { useDispatch } from "react-redux";
-import { addProduct, delProduct } from "@/redux/cartSlice";
+import { addProduct, delProduct, resetCart } from "@/redux/cartSlice";
 import { Product } from "@/lib/api";
+import OrderSendForm from "@/components/common/OrderSendForm";
+import { useState } from "react";
+import Modal from "@/components/common/Modal";
 
 function Cart() {
   const curCart = useSelector((state: RootState) => state.cart.cartPositions);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    dispatch(resetCart());
+  };
+
+  function sendOrder() {
+    //dispatch(resetCart());
+    openModal();
+  }
 
   const navigate = useNavigate();
 
@@ -1489,10 +1693,11 @@ function Cart() {
 
       {!!curCart.length && (
         <div className="flex flex-col xl:flex-row xl:justify-between w-full gap-4">
-          <div className="w-full lg:w-[780px] flex flex-col gap-4">
+          {/* <div className="w-full xl:w-[780px] flex flex-col gap-4"> */}
+          <div className="w-full flex flex-col gap-4">
             {curCart.map((val) => {
               return (
-                <div className="border border-gray-200 flex lg:flex-row rounded-md">
+                <div className="border border-gray-200 flex md:flex-row flex-col-reverse rounded-md items-center">
                   <img
                     className="w-52"
                     src={API_BASE_URL + val.product.image}
@@ -1508,7 +1713,7 @@ function Cart() {
                       </button>
                     </div>
 
-                    <div className="flex flex-row items-end gap-8">
+                    <div className="flex xxl:flex-row flex-col items-end xl:gap-8 gap-4">
                       <div className="flex flex-row mt-8">
                         <button
                           className="rounded-md p-4 w-14 h-14 border border-gray-300 flex items-center justify-center -mr-1 z-10"
@@ -1528,17 +1733,18 @@ function Cart() {
                           <Plus />
                         </button>
                       </div>
-
-                      <div className="heading-3">
-                        $
-                        {val.product.discont_price
-                          ? val.product.discont_price
-                          : val.product.price}
-                      </div>
-                      <div className="text-gray-500 2xl:text-[40px] text-[30px] font-medium leading-[1.3] line-through">
-                        {val.product.discont_price
-                          ? "$" + val.product.price
-                          : ""}
+                      <div className="flex xl:flex-row flex-col items-end gap-2">
+                        <div className="heading-3">
+                          $
+                          {val.product.discont_price
+                            ? val.product.discont_price
+                            : val.product.price}
+                        </div>
+                        <div className="text-gray-500 2xl:text-[20px] text-[15px] font-medium leading-[1.3] line-through">
+                          {val.product.discont_price
+                            ? "$" + val.product.price
+                            : ""}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1546,12 +1752,13 @@ function Cart() {
               );
             })}
           </div>
-          <div className="w-full lg:w-[548px] bg-gray-100 p-8 rounded-md">
+          {/* <div className="w-full xl:w-[548px] bg-gray-100 p-8 rounded-md"> */}
+          <div className=" bg-gray-100 p-8 rounded-md  xl:w-[60%]">
             <p className="heading-3 mb-6">Order details</p>
             <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
               {curCart.reduce((akk, cur) => akk + cur.count, 0)} items
             </p>
-            <div className="flex flex-row justify-between items-end">
+            <div className="flex flex-row justify-between items-end mb-4">
               <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
                 Total
               </p>
@@ -1564,6 +1771,22 @@ function Cart() {
                   return akk;
                 }, 0)}
               </p>
+            </div>
+            <OrderSendForm callback={sendOrder} />
+
+            <div>
+              <Modal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                title="Congratulations!"
+              >
+                <div className="text-white">
+                  <p>Your order has been successfully placed on the website.</p>
+                  <p>
+                    A manager will contact you shortly to confirm your order.
+                  </p>
+                </div>
+              </Modal>
             </div>
           </div>
         </div>
@@ -1609,7 +1832,7 @@ import { useLocation } from "react-router-dom";
 import { useFetchProductsByCategorieId } from "@/lib/api";
 import PreData from "@/components/common/PreData";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import Products from "@/components/product/ProductsComponent";
+import Products from "@/pages/Products";
 
 function Categorie() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
@@ -1646,7 +1869,7 @@ function Categorie() {
         additionalBreadcrumb={[{ name: data.category.title, url: pathname }]}
       />
       <h1 className="heading-2 mb-10">{data.category.title}</h1>
-      <Products products={data.data} />
+      <Products dataStart={data.data} isIncludeHead={false} />
     </>
   );
 }
@@ -1895,12 +2118,15 @@ import { useSetProducts } from "@/lib/api";
 import PreData from "@/components/common/PreData";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import ProductsComponent from "@/components/product/ProductsComponent";
+import { useState } from "react";
+import { Product } from "@/lib/api";
 
 type ProductsComponentProps = {
   isIncludeHead?: boolean;
   limit?: number;
   isSalesProducts?: boolean;
   isIncludeFilters?: boolean;
+  dataStart?: Product[];
 };
 
 function Products({
@@ -1908,8 +2134,18 @@ function Products({
   limit = 0,
   isSalesProducts = false,
   isIncludeFilters = true,
+  dataStart,
 }: ProductsComponentProps) {
-  const { data, isLoading, error, isFetched } = useSetProducts();
+  const { data: newData, isLoading, error, isFetched } = useSetProducts();
+
+  let data: Product[] = [];
+  if (dataStart?.length) data = dataStart;
+  else data = newData || [];
+
+  const [priceFrom, setPriceFrom] = useState<number | "">("");
+  const [priceTo, setPriceTo] = useState<number | "">("");
+  const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(false);
+  const [sortOption, setSortOption] = useState<string>("default");
 
   if (isLoading || !isFetched) {
     return (
@@ -1927,10 +2163,65 @@ function Products({
     );
   }
 
-  let viewData = data;
-  if (isSalesProducts)
-    viewData = viewData.filter((val) => val.discont_price > 0);
-  if (limit > 0) viewData = viewData.slice(0, limit);
+  let filteredProducts = data;
+
+  // if (isSalesProducts) {
+  //   setOnlyDiscounted(true);
+  //   filteredProducts = filteredProducts.filter((val) => val.discont_price > 0);
+  // }
+
+  if (onlyDiscounted || isSalesProducts) {
+    filteredProducts = filteredProducts.filter(
+      (product) => product.discont_price > 0
+    );
+  }
+  if (limit > 0) filteredProducts = filteredProducts.slice(0, limit);
+
+  if (priceFrom !== "") {
+    filteredProducts = filteredProducts.filter((product) => {
+      const price = product.discont_price || product.price;
+      return price >= (priceFrom as number);
+    });
+  }
+
+  if (priceTo !== "") {
+    filteredProducts = filteredProducts.filter((product) => {
+      const price = product.discont_price || product.price;
+      return price <= (priceTo as number);
+    });
+  }
+
+  //filteredProducts = [...filteredProducts];
+
+  switch (sortOption) {
+    case "newest":
+      filteredProducts.sort((a, b) => b.id - a.id);
+      break;
+    case "price-asc":
+      filteredProducts.sort(
+        (a, b) => (a.discont_price || a.price) - (b.discont_price || b.price)
+      );
+      break;
+    case "price-desc":
+      filteredProducts.sort(
+        (a, b) => (b.discont_price || b.price) - (a.discont_price || a.price)
+      );
+      break;
+    case "discount-asc":
+      filteredProducts.sort((a, b) => {
+        const aDiscount = a.discont_price ? a.price - a.discont_price : 0;
+        const bDiscount = b.discont_price ? b.price - b.discont_price : 0;
+        return aDiscount - bDiscount;
+      });
+      break;
+    case "discount-desc":
+      filteredProducts.sort((a, b) => {
+        const aDiscount = a.discont_price ? a.price - a.discont_price : 0;
+        const bDiscount = b.discont_price ? b.price - b.discont_price : 0;
+        return bDiscount - aDiscount;
+      });
+      break;
+  }
 
   return (
     <>
@@ -1942,8 +2233,63 @@ function Products({
           <h1 className="heading-2 mb-10">All products</h1>
         </>
       )}
-      {isIncludeFilters && <p>FILTERS</p>}
-      <ProductsComponent products={viewData} />
+      {isIncludeFilters && (
+        <div className="flex md:flex-row flex-col mb-10 lg:gap-10 gap-2">
+          <div className="flex flex-row lg:gap-4 gap-1 items-center">
+            <p className="lg:text-[20px] font-semibold leading-[1.3]">Price</p>
+            <input
+              className="lg:w-28 w-16 border border-gray-300 rounded-md px-4 py-2"
+              type="text"
+              placeholder="from"
+              value={priceFrom}
+              onChange={(e) =>
+                setPriceFrom(e.target.value ? parseFloat(e.target.value) : "")
+              }
+            />
+            <input
+              className="lg:w-28 w-14 border border-gray-300 rounded-md px-4 py-2"
+              type="text"
+              placeholder="to"
+              value={priceTo}
+              onChange={(e) =>
+                setPriceTo(e.target.value ? parseFloat(e.target.value) : "")
+              }
+            />
+          </div>
+          {!isSalesProducts && (
+            <div className="flex flex-row gap-4 items-center">
+              <p className="lg:text-[20px] font-semibold leading-[1.3]">
+                Discounted items
+              </p>
+              <input
+                type="checkbox"
+                name=""
+                id=""
+                className="w-8 h-8"
+                checked={onlyDiscounted}
+                onChange={(e) => setOnlyDiscounted(e.target.checked)}
+              />
+            </div>
+          )}
+
+          <div className="flex flex-row gap-4 items-center">
+            <p className="lg:text-[20px] font-semibold leading-[1.3]">Sorted</p>
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="lg:w-52 w-full border border-gray-300 rounded-md px-4 py-2"
+            >
+              <option value="default">by default</option>
+              <option value="newest">newest</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              {/* <option value="discount-asc">Discount: Low to High</option>
+              <option value="discount-desc">Discount: High to Low</option> */}
+            </select>
+          </div>
+        </div>
+      )}
+      <ProductsComponent products={filteredProducts} />
     </>
   );
 }
@@ -1994,8 +2340,12 @@ type CartState = {
   cartPositions: ProductPosition[];
 };
 
+// Загружаем сохранённое состояние из localStorage
+const savedCart = localStorage.getItem("cartPositions");
+const persistedCart = savedCart ? JSON.parse(savedCart) : [];
+
 const initialState: CartState = {
-  cartPositions: [],
+  cartPositions: persistedCart,
 };
 
 const CartSlice = createSlice({
@@ -2018,10 +2368,13 @@ const CartSlice = createSlice({
         (val) => val.product.id !== action.payload
       );
     },
+    resetCart(state) {
+      state.cartPositions = [];
+    },
   },
 });
 
-export const { addProduct, delProduct } = CartSlice.actions;
+export const { addProduct, delProduct, resetCart } = CartSlice.actions;
 export default CartSlice.reducer;
 
 ```
@@ -2086,6 +2439,11 @@ export const store = configureStore({
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
+store.subscribe(() => {
+  const state = store.getState();
+  const cartPositions = state.cart.cartPositions;
+  localStorage.setItem("cartPositions", JSON.stringify(cartPositions));
+});
 ```
 
 ## src\redux\userSlice.ts
@@ -2096,11 +2454,17 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type UserState = {
   name: string;
+  phone: string;
+  email: string;
+  kupon: boolean;
   loggedIn: boolean;
 };
 
 const initialState: UserState = {
   name: "",
+  phone: "",
+  email: "",
+  kupon: false,
   loggedIn: false,
 };
 
@@ -2108,18 +2472,24 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    login(state, action: PayloadAction<string>) {
-      state.name = action.payload;
+    login(state, action: PayloadAction<UserState>) {
+      state.name = action.payload.name;
+      state.phone = action.payload.phone;
+      state.email = action.payload.email;
+      state.kupon = action.payload.kupon;
       state.loggedIn = true;
     },
     logout(state) {
       state.name = "";
       state.loggedIn = false;
     },
+    closeKupon(state) {
+      state.kupon = false;
+    },
   },
 });
 
-export const { login, logout } = userSlice.actions;
+export const { login, logout, closeKupon } = userSlice.actions;
 export default userSlice.reducer;
 
 ```

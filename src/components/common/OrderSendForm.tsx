@@ -1,7 +1,7 @@
-import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useState } from "react";
-// import { log } from "console";
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface ContactFormData {
   name: string;
@@ -9,13 +9,31 @@ interface ContactFormData {
   email: string;
 }
 
-const OrderSendForm: React.FC = () => {
+interface OrderSendFormProps {
+  callback: () => void;
+}
+
+const OrderSendForm: React.FC<OrderSendFormProps> = ({ callback }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<ContactFormData>();
+
+  // Получаем данные пользователя из Redux
+  const { name, phone, email } = useSelector(
+    (state: RootState) => state.user
+  );
+
+  useEffect(() => {
+    // Если пользователь уже залогинен и есть данные,
+    // устанавливаем их в поля формы
+    if (name) setValue("name", name);
+    if (phone) setValue("phone", phone);
+    if (email) setValue("email", email);
+  }, [name, phone, email, setValue]);
 
   const [isAdded, setIsAdded] = useState(false);
   const onSubmit: SubmitHandler<ContactFormData> = (data) => {
@@ -23,6 +41,7 @@ const OrderSendForm: React.FC = () => {
     reset(); // Reset all form fields
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1000);
+    callback();
   };
 
   // const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -49,7 +68,7 @@ const OrderSendForm: React.FC = () => {
                 message: "Name must be at least 2 characters long",
               },
             })}
-            className={`bg-white placeholder-gray-400 shadow appearance-none border rounded w-full py-4 px-8 text-white leading-tight focus:outline-none focus:shadow-outline ${
+            className={`bg-white placeholder-gray-400 shadow appearance-none border rounded w-full py-4 px-8 text-black leading-tight focus:outline-none focus:shadow-outline ${
               errors.name ? "border-red-500" : ""
             }`}
             placeholder="Name"
@@ -77,7 +96,7 @@ const OrderSendForm: React.FC = () => {
                   "Please enter a valid phone number with at least 6 characters. Allowed characters: digits, (), +, -",
               },
             })}
-            className={`bg-white placeholder-gray-400 shadow appearance-none border rounded w-full py-4 px-8 text-white leading-tight focus:outline-none focus:shadow-outline ${
+            className={`bg-white placeholder-gray-400 shadow appearance-none border rounded w-full py-4 px-8 text-black leading-tight focus:outline-none focus:shadow-outline ${
               errors.phone ? "border-red-500" : ""
             }`}
             placeholder="Phone Number"
@@ -103,7 +122,7 @@ const OrderSendForm: React.FC = () => {
                 message: "Please enter a valid email address",
               },
             })}
-            className={`bg-white placeholder-gray-400 shadow appearance-none border rounded w-full py-4 px-8 text-white leading-tight focus:outline-none focus:shadow-outline ${
+            className={`bg-white placeholder-gray-400 shadow appearance-none border rounded w-full py-4 px-8 text-black leading-tight focus:outline-none focus:shadow-outline ${
               errors.email ? "border-red-500" : ""
             }`}
             placeholder="Email"
@@ -132,7 +151,7 @@ const OrderSendForm: React.FC = () => {
                 ? "bg-gray-200 text-blue-600"
                 : " text-white bg-blue-600 hover:bg-black hover:text-white"
             } `}
-           // onClick={(e) => handleClick(e)}
+            // onClick={(e) => handleClick(e)}
           >
             {isAdded ? "Order sendet" : "Order"}
           </button>

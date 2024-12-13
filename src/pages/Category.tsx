@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useFetchProductsByCategorieId } from "@/lib/api";
 import PreData from "@/components/common/PreData";
 import Breadcrumb from "@/components/common/Breadcrumb";
-import Products from "@/components/product/ProductsComponent";
+import Products from "@/pages/Products";
 
 function Categorie() {
   const slugs = useSelector((state: RootState) => state.slugs.slugs);
@@ -41,7 +41,7 @@ function Categorie() {
         additionalBreadcrumb={[{ name: data.category.title, url: pathname }]}
       />
       <h1 className="heading-2 mb-10">{data.category.title}</h1>
-      <Products products={data.data} />
+      <Products dataStart={data.data} isIncludeHead={false} />
     </>
   );
 }

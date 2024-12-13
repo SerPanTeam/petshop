@@ -10,8 +10,12 @@ type CartState = {
   cartPositions: ProductPosition[];
 };
 
+// Загружаем сохранённое состояние из localStorage
+const savedCart = localStorage.getItem("cartPositions");
+const persistedCart = savedCart ? JSON.parse(savedCart) : [];
+
 const initialState: CartState = {
-  cartPositions: [],
+  cartPositions: persistedCart,
 };
 
 const CartSlice = createSlice({
@@ -34,8 +38,11 @@ const CartSlice = createSlice({
         (val) => val.product.id !== action.payload
       );
     },
+    resetCart(state) {
+      state.cartPositions = [];
+    },
   },
 });
 
-export const { addProduct, delProduct } = CartSlice.actions;
+export const { addProduct, delProduct, resetCart } = CartSlice.actions;
 export default CartSlice.reducer;

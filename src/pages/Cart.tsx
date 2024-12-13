@@ -7,12 +7,30 @@ import IcoX from "@/assets/icons/x.svg?react";
 import Minus from "@/assets/icons/minus.svg?react";
 import Plus from "@/assets/icons/plus.svg?react";
 import { useDispatch } from "react-redux";
-import { addProduct, delProduct } from "@/redux/cartSlice";
+import { addProduct, delProduct, resetCart } from "@/redux/cartSlice";
+import { closeKupon } from "@/redux/userSlice";
 import { Product } from "@/lib/api";
 import OrderSendForm from "@/components/common/OrderSendForm";
+import { useState } from "react";
+import Modal from "@/components/common/Modal";
 
 function Cart() {
   const curCart = useSelector((state: RootState) => state.cart.cartPositions);
+
+  const { kupon } = useSelector((state: RootState) => state.user);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    dispatch(resetCart());
+    dispatch(closeKupon());
+  };
+
+  function sendOrder() {
+    //dispatch(resetCart());
+    openModal();
+  }
 
   const navigate = useNavigate();
 
@@ -122,21 +140,44 @@ function Cart() {
             <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
               {curCart.reduce((akk, cur) => akk + cur.count, 0)} items
             </p>
+            {kupon && (
+              <p className="text-red-700">-5% off on the first order</p>
+            )}
             <div className="flex flex-row justify-between items-end mb-4">
               <p className="text-gray-400 text-[40px] font-medium leading-[1.3]">
                 Total
               </p>
               <p className="text-black text-[64px] font-bold leading-[1.1]">
                 $
-                {curCart.reduce((akk, cur) => {
-                  let cur_price = cur.product.discont_price;
-                  if (!cur_price) cur_price = cur.product.price;
-                  akk = akk + cur.count * cur_price;
-                  return akk;
-                }, 0)}
+                {(
+                  curCart.reduce((akk, cur) => {
+                    // let cur_price = cur.product.discont_price;
+                    // if (!cur_price) cur_price = cur.product.price;
+                    const cur_price =
+                      cur.product.discont_price ?? cur.product.price; // Убедимся, что это число
+
+                    akk = akk + cur.count * cur_price;
+                    return akk;
+                  }, 0) * (kupon ? 0.95 : 1)
+                ).toFixed(2)}
               </p>
             </div>
-            <OrderSendForm />
+            <OrderSendForm callback={sendOrder} />
+
+            <div>
+              <Modal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                title="Congratulations!"
+              >
+                <div className="text-white">
+                  <p>Your order has been successfully placed on the website.</p>
+                  <p>
+                    A manager will contact you shortly to confirm your order.
+                  </p>
+                </div>
+              </Modal>
+            </div>
           </div>
         </div>
       )}

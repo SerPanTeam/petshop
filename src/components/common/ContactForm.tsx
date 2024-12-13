@@ -1,7 +1,11 @@
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useState } from "react";
-// import { log } from "console";
+
+import { useDispatch } from "react-redux";
+import { login } from "@/redux/userSlice";
+// import { useSelector } from "react-redux";
+// import { RootState } from "@/redux/store";
 
 interface ContactFormData {
   name: string;
@@ -17,22 +21,24 @@ const ContactForm: React.FC = () => {
     reset,
   } = useForm<ContactFormData>();
 
+  const dispatch = useDispatch();
+
   const [isAdded, setIsAdded] = useState(false);
   const onSubmit: SubmitHandler<ContactFormData> = (data) => {
     console.log("Form submitted:", data);
+    dispatch(
+      login({
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        kupon: true,
+        loggedIn: true,
+      })
+    );
     reset(); // Reset all form fields
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1000);
   };
-
-  // const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-  //   e.stopPropagation();
-  //   e.preventDefault();
-  //   callbackFunc?.();
-
-  //   setIsAdded(true);
-  //   setTimeout(() => setIsAdded(false), 1000);
-  // };
 
   return (
     <div className="w-full md:w-[400px] ld:w-[600px]">
@@ -132,7 +138,7 @@ const ContactForm: React.FC = () => {
                 ? "bg-gray-200 text-blue-600"
                 : " text-black bg-white hover:bg-black hover:text-white"
             } `}
-           // onClick={(e) => handleClick(e)}
+            // onClick={(e) => handleClick(e)}
           >
             {isAdded ? "Request Submitted" : "Get a discount"}
           </button>

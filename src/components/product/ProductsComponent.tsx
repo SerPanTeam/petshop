@@ -15,7 +15,6 @@ function Products({ products }: { products: Product[] }) {
     return <div>Loading slugs...</div>;
   }
 
-
   function getCatSlugByProdID(prodId: number) {
     //console.log(slugs);
     const catID = slugs.filter((val) => val.id == prodId && val.catId > 0)[0]
@@ -35,7 +34,6 @@ function Products({ products }: { products: Product[] }) {
           >
             <div className="flex flex-col justify-center border rounded-md items-center gap-5">
               <div className="relative group w-full lg:h-72 md:h-56 h-56 overflow-hidden">
-                {/* <div className="relative group"> */}
                 <img
                   className="w-full object-cover h-full"
                   src={API_BASE_URL + val.image}
@@ -46,20 +44,6 @@ function Products({ products }: { products: Product[] }) {
                     -{getPercent(val.price, val.discont_price)}%
                   </span>
                 )}
-
-                {/* <button
-                  className="w-[90%] absolute bottom-4 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
-                  onClick={onButtonClick}
-                >
-                  Add to Cart
-                </button> */}
-
-                {/* <button
-className="h-14 w-full bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-[#282828]"
-onClick={() => addToCart(data)}
->
-Add to Cart
-</button> */}
 
                 <AddToCartButton
                   data={val}
